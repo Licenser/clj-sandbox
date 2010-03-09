@@ -6,13 +6,13 @@
 (defn s-seq 
   "Convertns a form into a sequence."
   [form]
-  (tree-seq seq? #(let [a (macroexpand %)] (or (and (seq? a) a) (list a))) form))
+  (tree-seq #(coll? %) #(let [a (macroexpand %)] (or (and (coll? a) (seq a)) (list a))) form))
 
 
 (defn fn-seq 
   "Converst a form into a sequence of functions."
   [form]
-  (filter ifn? (s-seq form)))
+  (filter #(and (ifn? %) (not (vector? %))) (s-seq form)))
 
 (defn function-tester
   "Creates a tester that whitelists functions."
@@ -53,11 +53,10 @@
      (function-tester 'def))
 
 (def general-functions
-     (function-tester '= '== 'case 'if 'comment 'complement 'let 'constantly 'do 'loop*  'lop 'let* 'recur 'fn* 'fn? 'hash 'identical? 'macroexpand 'name 'not= 'partial 'trampoline))
+     (function-tester '= '== 'case 'if 'comment 'complement 'let 'constantly 'do 'loop* 'lop 'let* 'recur 'fn* 'fn? 'hash 'identical? 'macroexpand 'name 'not= 'partial 'trampoline))
 
 (def string-functions
      (function-tester 'subs 'str))
-
 
 (def regexp-functions
      (function-tester 're-find 're-groups 're-matcher 're-matches 're-pattern 're-seq))
@@ -83,8 +82,22 @@
       (function-tester 'ffirst 'first 'fnext 'last 'next 'nfirst 'nnext 'nth 'nthnext 'peek 'pop 'rest 'second 'take 'take-last 'take-nth 'take-while)
       (function-tester 'contains? 'counted? 'empty? 'every? 'reversible? 'seq? 'some 'sorted?)))
 
+
 (def set-functions
      (function-tester 'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 'key 'keys 'merge 'merge-with 'select-keys 'set 'set? 'update-in 'sorted-map 'sorted-map-by 'sorted-set))
+
+(def secure-tester
+     (new-sandbox-tester 
+      (whitelist general-functions)
+      (whitelist math-functions)))
+      (whitelist list-functions)
+      
+      (whitelist set-functions)
+      (whitelist logic-functions)
+      (whitelist general-functions)))
+      (whitelist string-functions)
+      (whitelist regexp-functions)))
+
 
 (defn new-sandbox-tester
   [& definitions]
@@ -96,5 +109,5 @@
 	(fn [f] 
 	  (and  
 	   (some true? (map #(% f) wl))
-	   (not (some true? (map #(% f) bl)))
-	   )) (fn-seq form))))))
+	   (not (some true? (map #(% f) bl)))))
+	(fn-seq form))))))
