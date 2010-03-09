@@ -8,30 +8,37 @@
   [form]
   (tree-seq #(coll? %) #(let [a (macroexpand %)] (or (and (coll? a) (seq a)) (list a))) form))
 
-
+; Weeh thanks to bsteuber for advice on resolve!
 (defn fn-seq 
   "Converst a form into a sequence of functions."
   [form]
-  (filter #(and (ifn? %) (not (vector? %))) (s-seq form)))
+  (remove nil? (map (fn [s]
+	 (if (some (partial = s) '(fn* let* def loop*))
+	   s
+	   (resolve s)))
+       (filter symbol? (s-seq form)))))
 
 (defn function-tester
   "Creates a tester that whitelists functions."
   [& functions]
   (fn [form]
-    (some true? (map (partial = form) functions))))
+    (if (= (type form) clojure.lang.Var)
+      (map (partial = (:name (meta form))) functions)
+      (map (partial = form) functions))))
+  
 
 (defn namespace-tester
   "Creates a tester that whitelists functions."
   [& namespaces]
   (fn [form]
-    (if (namespace form)
-      (map (partial = (symbol (namespace form))) namespaces)
-      (map (partial = (namespace form)) namespaces))))
+    (if (= (type form) clojure.lang.Var)
+      (map (partial = (ns-name (:ns (meta form)))) namespaces)
+      '())))
 
 (defn combine-tests
      [& tests]
      (fn [form]
-      (some true? (su/flatten (map #(% form) tests)))))
+      (map #(% form) tests)))
 
 (defn whitelist
   ([test & tests]
@@ -108,6 +115,6 @@
        (map 
 	(fn [f] 
 	  (and  
-	   (some true? (map #(% f) wl))
-	   (not (some true? (map #(% f) bl)))))
+	   (some true? (su/flatten (map #(% f) wl)))
+	   (not (some true? (su/flatten (map #(% f) bl))))))
 	(fn-seq form))))))
