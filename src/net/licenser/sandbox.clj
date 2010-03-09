@@ -1,1 +1,1 @@
-(ns clj-sandbox.core)
+(ns net.licenser.sandbox)

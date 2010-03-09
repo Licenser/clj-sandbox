@@ -1,15 +1,15 @@
 # clj-sandbox
 
-FIXME: write description
+This is my attempt to create a library that allows easy sandboxing of clojure code, something like a secure eval functionality for untrusted code.
 
 ## Usage
 
-FIXME: write
+none yet
 
 ## Installation
 
-FIXME: write
+none yet
 
 ## License
 
-FIXME: write
+This code is published under the EPL, have fun!
