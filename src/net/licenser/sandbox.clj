@@ -147,6 +147,25 @@
         context))
 
 
+(defn create-sandbox-compiler
+  ([nspace tester timeout context]
+     (if (find-ns nspace)
+       (fn [code]
+	 (let [form (read-string code)]
+	   (if (tester form)
+	     (binding [*ns* (find-ns nspace)]
+               (fn [] 
+	         (sandbox (fn [] 
+		  	    (let [f (future (eval form))]
+			      (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS)))
+			      context)))
+	     "Code didn't pass tests!")))
+       "Namespace not found!"))
+  ([nspace tester timeout]
+     (create-sandbox-compiler nspace tester timeout (context (domain (empty-perms-list)))))
+  ([nspace tester]
+     (create-sandbox-compiler nspace tester 5000 (context (domain (empty-perms-list))))))
+    
 
 (defn create-sandbox
   ([nspace tester timeout context]
@@ -162,7 +181,6 @@
 	     "Code didn't pass tests!")))
        "Namespace not found!"))
   ([nspace tester timeout]
-     (create-sandbox nspace tester timeout (context (domain (empty-perms-list))))
-     )
+     (create-sandbox nspace tester timeout (context (domain (empty-perms-list)))))
   ([nspace tester]
      (create-sandbox nspace tester 5000 (context (domain (empty-perms-list))))))
