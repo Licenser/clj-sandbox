@@ -93,18 +93,6 @@
 (def set-functions
      (function-tester 'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 'key 'keys 'merge 'merge-with 'select-keys 'set 'set? 'update-in 'sorted-map 'sorted-map-by 'sorted-set))
 
-(def secure-tester
-     (new-sandbox-tester 
-      (whitelist general-functions)
-      (whitelist math-functions)))
-      (whitelist list-functions)
-      
-      (whitelist set-functions)
-      (whitelist logic-functions)
-      (whitelist general-functions)))
-      (whitelist string-functions)
-      (whitelist regexp-functions)))
-
 
 (defn new-sandbox-tester
   [& definitions]
@@ -118,3 +106,63 @@
 	   (some true? (su/flatten (map #(% f) wl)))
 	   (not (some true? (su/flatten (map #(% f) bl))))))
 	(fn-seq form))))))
+
+(def secure-tester
+     (new-sandbox-tester 
+      (whitelist general-functions)
+      (whitelist math-functions)
+      (whitelist list-functions)
+      (whitelist set-functions)
+      (whitelist logic-functions)
+      (whitelist string-functions)
+      (whitelist regexp-functions)))
+
+
+; Java Sandbox Stuff, this is from the clojurebot code
+; http://github.com/hiredman/clojurebot/blob/master/src/hiredman/sandbox.clj
+
+(defn enable-security-manager []
+      (System/setSecurityManager (SecurityManager.)))
+
+(defn empty-perms-list []
+      (doto (java.security.Permissions.)
+        (.add (RuntimePermission. "accessDeclaredMembers"))))
+
+
+(defn domain [perms]
+     (java.security.ProtectionDomain.
+       (java.security.CodeSource. nil
+                                  (cast java.security.cert.Certificate nil))
+       perms))
+ 
+(defn context [dom]
+      (java.security.AccessControlContext. (into-array [dom])))
+ 
+(defn priv-action [thunk]
+      (proxy [java.security.PrivilegedAction] [] (run [] (thunk))))
+ 
+(defn sandbox [thunk context]
+      (java.security.AccessController/doPrivileged
+        (priv-action thunk)
+        context))
+
+
+
+(defn create-sandbox
+  ([nspace tester timeout context]
+     (if (find-ns nspace)
+       (fn [code]
+	 (let [form (read-string code)]
+	   (if (tester form)
+	     (binding [*ns* (find-ns nspace)]
+	       (sandbox (fn [] 
+			  (let [f (future (eval form))]
+			    (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS)))
+			    context))
+	     "Code didn't pass tests!")))
+       "Namespace not found!"))
+  ([nspace tester timeout]
+     (create-sandbox nspace tester timeout (context (domain (empty-perms-list))))
+     )
+  ([nspace tester]
+     (create-sandbox nspace tester 5000 (context (domain (empty-perms-list))))))
