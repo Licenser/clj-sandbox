@@ -153,7 +153,8 @@
        (fn [code]
 	 (let [form (read-string code)]
 	   (if (tester form)
-	     (binding [*ns* (find-ns nspace)]
+	     (binding [*ns* (find-ns nspace)
+                       *read-eval* false]
                (fn [] 
 	         (sandbox (fn [] 
 		  	    (let [f (future (eval form))]
@@ -173,7 +174,8 @@
        (fn [code]
 	 (let [form (read-string code)]
 	   (if (tester form)
-	     (binding [*ns* (find-ns nspace)]
+	     (binding [*ns* (find-ns nspace)
+                       *read-eval* false]
 	       (sandbox (fn [] 
 			  (let [f (future (eval form))]
 			    (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS)))
