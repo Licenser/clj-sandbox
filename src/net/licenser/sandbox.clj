@@ -2,6 +2,8 @@
   (:require [clojure.contrib.seq-utils :as su]))
 
 
+
+(def *default-sandbox-timeout* 5000)
 ; Thanks to hiredman for this code snippet!
 (defn s-seq 
   "Convertns a form into a sequence."
@@ -97,13 +99,13 @@
 (defn new-sandbox-tester
   [& definitions]
   (let [{wl :whitelist bl :blacklist} (reduce #(assoc %1 (:type %2) (conj (get %1 (:type %2)) (:tests %2))) {} definitions)]
-    (fn [form]
+    (fn [form nspace]
       (every?
        true? 
        (map 
 	(fn [f] 
 	  (and  
-	   (some true? (su/flatten (map #(% f) wl)))
+	   (some true? (su/flatten (map #(% f) (conj wl (namespace-tester nspace)))))
 	   (not (some true? (su/flatten (map #(% f) bl))))))
 	(fn-seq form))))))
 
@@ -146,43 +148,50 @@
         (priv-action thunk)
         context))
 
+(def debug-tester (constantly true))
+
+(def *default-sandbox-tester* secure-tester)
 
 (defn create-sandbox-compiler
   ([nspace tester timeout context]
-     (if (find-ns nspace)
-       (fn [code]
+     (fn [code & locals]
 	 (let [form (read-string code)]
-	   (if (tester form)
-	     (binding [*ns* (find-ns nspace)
-                       *read-eval* false]
-               (fn [] 
-	         (sandbox (fn [] 
-		  	    (let [f (future (eval form))]
-			      (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS)))
-			      context)))
-	     "Code didn't pass tests!")))
-       "Namespace not found!"))
+	   (if (tester form nspace)
+	     (binding [*ns* (create-ns nspace)]
+	       (refer 'clojure.core)
+	       (dorun (map (partial intern nspace) locals))
+	       (fn [& bindings]
+		 (dorun (map (partial intern nspace) locals bindings))
+		 (sandbox 
+		  (fn []
+		    (let [f (future (binding [*ns* (find-ns nspace)] (eval form)))]
+		      (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS)))
+		  context)))
+	   (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
   ([nspace tester timeout]
      (create-sandbox-compiler nspace tester timeout (context (domain (empty-perms-list)))))
   ([nspace tester]
-     (create-sandbox-compiler nspace tester 5000 (context (domain (empty-perms-list))))))
-    
+     (create-sandbox-compiler nspace tester *default-sandbox-timeout*))
+  ([nspace]
+     (create-sandbox-compiler nspace *default-sandbox-tester*))
+  ([]
+     (create-sandbox-compiler (gensym "net.licenser.sandbox"))))    
 
 (defn create-sandbox
   ([nspace tester timeout context]
-     (if (find-ns nspace)
        (fn [code]
 	 (let [form (read-string code)]
-	   (if (tester form)
-	     (binding [*ns* (find-ns nspace)
-                       *read-eval* false]
-	       (sandbox (fn [] 
+	   (if (tester form nspace)
+	     (sandbox (fn []
 			  (let [f (future (eval form))]
 			    (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS)))
-			    context))
-	     "Code didn't pass tests!")))
-       "Namespace not found!"))
+			context)
+	   (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
   ([nspace tester timeout]
      (create-sandbox nspace tester timeout (context (domain (empty-perms-list)))))
   ([nspace tester]
-     (create-sandbox nspace tester 5000 (context (domain (empty-perms-list))))))
+     (create-sandbox nspace tester *default-sandbox-timeout*))
+  ([nspace]
+     (create-sandbox nspace *default-sandbox-tester*))
+  ([]
+     (create-sandbox (gensym "net.licenser.sandbox"))))
