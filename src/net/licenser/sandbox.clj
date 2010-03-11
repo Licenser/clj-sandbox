@@ -3,7 +3,10 @@
 
 
 
-(def *default-sandbox-timeout* 5000)
+(def 
+ #^{:doc "Default timeout for the sandbox. It can be altert in the sandbox creators."}
+ *default-sandbox-timeout* 5000)
+
 ; Thanks to hiredman for this code snippet!
 (defn s-seq 
   "Convertns a form into a sequence."
@@ -30,7 +33,7 @@
   
 
 (defn namespace-tester
-  "Creates a tester that whitelists functions."
+  "Creates a tester that whitelists all functions within a namespace."
   [& namespaces]
   (fn [form]
     (if (= (type form) clojure.lang.Var)
@@ -38,11 +41,13 @@
       '())))
 
 (defn combine-tests
+  "Combines two testers."
      [& tests]
      (fn [form]
       (map #(% form) tests)))
 
 (defn whitelist
+  "Creates a whitelist of testers. Testers take a var and unless they return true the test will fail."
   ([test & tests]
      {:type :whitelist
       :tests (apply combine-tests test tests)})
@@ -51,6 +56,7 @@
       :tests test}))
 
 (defn blacklist
+  "Creates a blacklist of testers. Testers take a var and if they return true the blacklist will fail the test."
   ([test & tests]
      {:type :blacklist
       :tests (apply combine-tests test tests)})
@@ -97,6 +103,7 @@
 
 
 (defn new-sandbox-tester
+  "Creates a new tester combined from a set of black and whitelists."
   [& definitions]
   (let [{wl :whitelist bl :blacklist} (reduce #(assoc %1 (:type %2) (conj (get %1 (:type %2)) (:tests %2))) {} definitions)]
     (fn [form nspace]
@@ -109,7 +116,9 @@
 	   (not (some true? (su/flatten (map #(% f) bl))))))
 	(fn-seq form))))))
 
-(def secure-tester
+(def 
+ #^{:doc "A tester that should cover most of the basic functions which seem undangerouse enough - at least I think so. No guarnatee for that!"}
+ secure-tester
      (new-sandbox-tester 
       (whitelist general-functions)
       (whitelist math-functions)
@@ -143,16 +152,20 @@
 (defn priv-action [thunk]
       (proxy [java.security.PrivilegedAction] [] (run [] (thunk))))
  
-(defn sandbox [thunk context]
+(defn sandbox
+  [thunk context]
       (java.security.AccessController/doPrivileged
         (priv-action thunk)
         context))
 
-(def debug-tester (constantly true))
+(def 
+ #^{:doc "A tester that passes everything, convinent for trying and debugging but not secure."} 
+ debug-tester (constantly true))
 
 (def *default-sandbox-tester* secure-tester)
 
 (defn create-sandbox-compiler
+  "Creates a sandbox that returns rerunable code, you can pass locals which will be passed to the 'compiled' function in the same order as defined before 'compilation'."
   ([nspace tester timeout context]
      (fn [code & locals]
 	 (let [form (read-string code)]
@@ -178,6 +191,7 @@
      (create-sandbox-compiler (gensym "net.licenser.sandbox"))))    
 
 (defn create-sandbox
+  "Creates a sandbox that evaluates the code string that it gets passed."
   ([nspace tester timeout context]
        (fn [code]
 	 (let [form (read-string code)]
@@ -194,4 +208,4 @@
   ([nspace]
      (create-sandbox nspace *default-sandbox-tester*))
   ([]
-     (create-sandbox (gensym "net.licenser.sandbox"))))
+     (create-sandbox (gensym "net.licenser.sandbox.box"))))
