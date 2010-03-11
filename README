@@ -7,11 +7,18 @@ This is my attempt to create a library that allows easy sandboxing of clojure co
 
 1) create a .java.policy file to grant your code rights.
 
-2) in your code:
+2) in your code this will give you a very simple sandbox without jvm sandboxing:
+  (use 'net.licenser.sandbox)
+  (def my-sandbox (create-sandbox))
+  (my-sandbox "(+ 1 1)")
+
+or if you want more security and posibilties
+
   (use 'net.licenser.sandbox)
   (enable-security-manager)
-  (def my-sandbox (create-sandbox 'user secure-tester))
-  (my-sandbox "(+ 1 1)")
+  (def sc (create-sandbox-compiler))
+  (def my-really-secure-add (sc "(+ a b)" a b))
+  (my-really-secure-add 23 19) ;=> 42
 
 ## Installation
 
