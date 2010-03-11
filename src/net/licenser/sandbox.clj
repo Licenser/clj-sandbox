@@ -167,17 +167,31 @@
 (defn create-sandbox-compiler
   "Creates a sandbox that returns rerunable code, you can pass locals which will be passed to the 'compiled' function in the same order as defined before 'compilation'."
   ([nspace tester timeout context]
+     (binding [*ns* (create-ns nspace)]
+       (refer 'clojure.core))
      (fn [code & locals]
 	 (let [form (read-string code)]
 	   (if (tester form nspace)
 	     (binding [*ns* (create-ns nspace)]
-	       (refer 'clojure.core)
-	       (dorun (map (partial intern nspace) locals))
-	       (fn [& bindings]
-		 (dorun (map (partial intern nspace) locals bindings))
+	       (dorun (map (partial ns-unmap nspace) locals))
+     	       (dorun (map (partial intern nspace) locals))
+	       (fn [bindings & values]
+		 (dorun (map (partial intern nspace) locals values))
 		 (sandbox 
 		  (fn []
-		    (let [f (future (binding [*ns* (find-ns nspace)] (eval form)))]
+		    (let [f (future 
+			     (let [] 
+			       (push-thread-bindings 
+				(assoc (apply hash-map 
+					      (su/flatten 
+					       (map 
+						(fn [[k v]] 
+						  [(resolve k) v]) 
+						(seq bindings))))
+				  (var *ns*) (create-ns nspace)))
+			       (try 
+				(eval form)
+				(finally (pop-thread-bindings)))))]
 		      (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS)))
 		  context)))
 	   (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
