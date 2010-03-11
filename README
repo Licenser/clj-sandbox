@@ -18,7 +18,7 @@ or if you want more security and posibilties
   (enable-security-manager)
   (def sc (create-sandbox-compiler))
   (def my-really-secure-add (sc "(+ a b)" a b))
-  (my-really-secure-add 23 19) ;=> 42
+  (my-really-secure-add {} 23 19) ;=> 42
 
 ## Installation
 

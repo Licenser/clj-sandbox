@@ -165,7 +165,13 @@
 (def *default-sandbox-tester* secure-tester)
 
 (defn create-sandbox-compiler
-  "Creates a sandbox that returns rerunable code, you can pass locals which will be passed to the 'compiled' function in the same order as defined before 'compilation'."
+  "Creates a sandbox that returns rerunable code, you can pass locals which will be passed to the 'compiled' function in the same order as defined before 'compilation'.
+The compiled code is a function that takes one or more parameters, the first parameter is a hash map of bindings like {'*out my-writer} that will beind within the execution.
+every following value is mapped to a local value given at compile time in the same odder so:
+  (def my-writer (java.io.StringWriter.))
+  (def code (compiler \"(println a)\" a))
+  (code {'*out my-writer} 1)
+will wrote 1 into my-writer istead of the standard output."
   ([nspace tester timeout context]
      (binding [*ns* (create-ns nspace)]
        (refer 'clojure.core))
