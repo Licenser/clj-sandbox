@@ -175,7 +175,7 @@ will wrote 1 into my-writer istead of the standard output."
   ([nspace tester timeout context]
      (binding [*ns* (create-ns nspace)]
        (refer 'clojure.core))
-     (fn [code & locals]
+     (fn sandbox-compiler [code & locals]
 	 (let [form (read-string code)]
 	   (if (tester form nspace)
 	     (binding [*ns* (create-ns nspace)]
@@ -184,14 +184,14 @@ will wrote 1 into my-writer istead of the standard output."
 	       (fn [bindings & values]
 		 (dorun (map (partial intern nspace) locals values))
 		 (sandbox 
-		  (fn []
+		  (fn sandboxed-code []
 		    (let [f (future 
 			     (let [] 
 			       (push-thread-bindings 
 				(assoc (apply hash-map 
 					      (su/flatten 
 					       (map 
-						(fn [[k v]] 
+						(fn jvm-sandbox-runable-code [[k v]] 
 						  [(resolve k) v]) 
 						(seq bindings))))
 				  (var *ns*) (create-ns nspace)))
@@ -213,10 +213,10 @@ will wrote 1 into my-writer istead of the standard output."
 (defn create-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed."
   ([nspace tester timeout context]
-       (fn [code]
+       (fn sandbox [code]
 	 (let [form (read-string code)]
 	   (if (tester form nspace)
-	     (sandbox (fn []
+	     (sandbox (fn sandbox-jvm-runnable-code []
 			  (let [f (future (eval form))]
 			    (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS)))
 			context)
