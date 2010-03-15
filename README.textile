@@ -1,18 +1,22 @@
-# clj-sandbox
+h1. clj-sandbox
 
 This is my attempt to create a library that allows easy sandboxing of clojure code, something like a secure eval functionality for untrusted code.
 
-## Usage
-
+h2. Usage
 
 1) create a .java.policy file to grant your code rights.
 
-2) in your code this will give you a very simple sandbox without jvm sandboxing:
+h3. Simple example
+
+In your code this will give you a very simple sandbox without jvm sandboxing:
+
   (use 'net.licenser.sandbox)
   (def my-sandbox (create-sandbox))
   (my-sandbox "(+ 1 1)")
 
-or if you want more security and posibilties
+h3. More advanced example
+
+If you want more security and posibilties
 
   (use 'net.licenser.sandbox)
   (enable-security-manager)
@@ -20,10 +24,14 @@ or if you want more security and posibilties
   (def my-really-secure-add (sc "(+ a b)" a b))
   (my-really-secure-add {} 23 19) ;=> 42
 
-## Installation
+h2. Installation
 
-none yet
+Add the following to your project.clj in leiningen:
 
-## License
+  [clj-sandbox "0.1.0-SNAPSHOT"]
 
-This code is published under the EPL, have fun!
+h2. License
+
+Copyright (c) 2009 Heinz N. Gies.
+
+This code is published under the EPL, have fun! See LICENSE.html for the booring stuff.
