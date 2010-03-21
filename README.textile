@@ -10,7 +10,7 @@ h3. Simple example
 
 In your code this will give you a very simple sandbox without jvm sandboxing:
 
-bc.  (use 'net.licenser.sandbox)
+bc.   (use 'net.licenser.sandbox)
   (def my-sandbox (create-sandbox))
   (my-sandbox "(+ 1 1)")
 
@@ -18,8 +18,7 @@ h3. More advanced example
 
 If you want more security and posibilties
 
-bc.
-  (use 'net.licenser.sandbox)
+bc.   (use 'net.licenser.sandbox)
   (enable-security-manager)
   (def sc (create-sandbox-compiler))
   (def my-really-secure-add (sc "(+ a b)" 'a 'b))
