@@ -183,9 +183,9 @@ will wrote 1 into my-writer istead of the standard output."
      	       (dorun (map (partial intern nspace) locals))
 	       (fn [bindings & values]
 		 (dorun (map (partial intern nspace) locals values))
-		 (sandbox 
-		  (fn sandboxed-code []
-		    (let [f (future 
+		 (let [f (future 
+			  (sandbox 
+			   (fn sandboxed-code []
 			     (let [] 
 			       (push-thread-bindings 
 				(assoc (apply hash-map 
@@ -197,10 +197,9 @@ will wrote 1 into my-writer istead of the standard output."
 				  (var *ns*) (create-ns nspace)))
 			       (try 
 				(eval form)
-				(finally (pop-thread-bindings)))))]
-		      (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS)))
-		  context)))
-	   (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
+				(finally (pop-thread-bindings))))) context))]
+		      (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS))))
+	     (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
   ([nspace tester timeout]
      (create-sandbox-compiler nspace tester timeout (context (domain (empty-perms-list)))))
   ([nspace tester]
@@ -216,11 +215,9 @@ will wrote 1 into my-writer istead of the standard output."
        (fn sandbox [code]
 	 (let [form (read-string code)]
 	   (if (tester form nspace)
-	     (sandbox (fn sandbox-jvm-runnable-code []
-			  (let [f (future (eval form))]
-			    (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS)))
-			context)
-	   (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
+	     (let [f (future (sandbox (fn sandbox-jvm-runnable-code [] (eval form)) context))]
+	       (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS))
+	     (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
   ([nspace tester timeout]
      (create-sandbox nspace tester timeout (context (domain (empty-perms-list)))))
   ([nspace tester]
