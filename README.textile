@@ -18,10 +18,11 @@ h3. More advanced example
 
 If you want more security and posibilties
 
-bc.  (use 'net.licenser.sandbox)
+bc.
+  (use 'net.licenser.sandbox)
   (enable-security-manager)
   (def sc (create-sandbox-compiler))
-  (def my-really-secure-add (sc "(+ a b)" a b))
+  (def my-really-secure-add (sc "(+ a b)" 'a 'b))
   (my-really-secure-add {} 23 19) ;=> 42
 
 h2. Installation
@@ -37,4 +38,6 @@ Copyright (c) 2009 Heinz N. Gies.
 This code is published under the EPL, have fun! See LICENSE.html for the booring stuff.
 
 h2. Thanks
-Thanks to hiredman fron #clojure for the patience with my question and the code for the JVM jail :)
+
+Thanks to hiredman from #clojure for the patience with my question and the code for the JVM jail :).
+Also thanks to Rayne from #clojure for using and testing the library, spotting evilish bugs!
