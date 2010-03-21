@@ -1,5 +1,6 @@
 (ns net.licenser.sandbox
-  (:require [clojure.contrib.seq-utils :as su]))
+  (:require [clojure.contrib.seq-utils :as su])
+  (:import (java.util.concurrent FutureTask TimeUnit TimeoutException)))
 
 
 
@@ -175,6 +176,19 @@
 
 (def *default-sandbox-tester* secure-tester)
 
+
+;;;;;;;; Thanks to hiredman's and  Chousuke as I get it right for this piece of code.
+;;;;;;;; Sadly it seems future does not work as a timeout
+(defn thunk-timeout [thunk seconds]
+      (let [task (FutureTask. thunk)
+            thr (Thread. task)]
+        (try
+          (.start thr)
+          (.get task seconds TimeUnit/MILLISECONDS)
+          (catch TimeoutException e
+                 (.cancel task true)
+                 (.stop thr (Exception. "Thread stopped!")) "Execution Timed Out"))))
+
 (defn create-sandbox-compiler
   "Creates a sandbox that returns rerunable code, you can pass locals which will be passed to the 'compiled' function in the same order as defined before 'compilation'.
 The compiled code is a function that takes one or more parameters, the first parameter is a hash map of bindings like {'*out my-writer} that will beind within the execution.
@@ -194,23 +208,23 @@ will wrote 1 into my-writer istead of the standard output."
      	       (dorun (map (partial intern nspace) locals))
 	       (fn [bindings & values]
 		 (dorun (map (partial intern nspace) locals values))
-		 (let [f (future 
-			  (sandbox 
-			   (fn sandboxed-code []
-			     (let [] 
-			       (push-thread-bindings 
-				(assoc (apply hash-map 
-					      (su/flatten 
-					       (map 
-						(fn jvm-sandbox-runable-code [[k v]] 
-						  [(resolve k) v]) 
-						(seq bindings))))
-				  (var *ns*) (create-ns nspace)))
-			       (try 
-				(let [r (eval form)]
-				  (if (coll? r) (doall r) r))
-				(finally (pop-thread-bindings))))) context))]
-		   (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS))))
+		 (thunk-timeout 
+		  (fn timeout-box [] 
+		    (sandbox 
+		     (fn sandboxed-code []
+		       (let [] 
+			 (push-thread-bindings 
+			  (assoc (apply hash-map 
+					(su/flatten 
+					 (map 
+					  (fn jvm-sandbox-runable-code [[k v]] 
+					    [(resolve k) v]) 
+					  (seq bindings))))
+			    (var *ns*) (create-ns nspace)))
+			 (try 
+			  (let [r (eval form)]
+			    (if (coll? r) (doall r) r))
+			  (finally (pop-thread-bindings))))) context)) timeout)))
 	     (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
   ([nspace tester timeout]
      (create-sandbox-compiler nspace tester timeout (context (domain (empty-perms-list)))))
@@ -227,9 +241,12 @@ will wrote 1 into my-writer istead of the standard output."
        (fn sandbox-executor [code]
 	 (let [form (read-string code)]
 	   (if (tester form nspace)
-	     (let [f (future (sandbox (fn sandbox-jvm-runnable-code [] (let [r (eval form)]
-									 (if (coll? r) (doall r) r))) context))]
-	       (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS))
+	     (thunk-timeout 
+	      (fn timeout-box [] 
+		(sandbox 
+		 (fn sandbox-jvm-runnable-code []
+		   (let [r (eval form)]
+		     (if (coll? r) (doall r) r))) context)) timeout)
 	     (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
   ([nspace tester timeout]
      (create-sandbox nspace tester timeout (context (domain (empty-perms-list)))))
