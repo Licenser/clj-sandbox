@@ -11,14 +11,14 @@
 (defn s-seq 
   "Convertns a form into a sequence."
   [form]
-  (tree-seq #(coll? %) #(let [a (macroexpand %)] (or (and (coll? a) (seq a)) (list a))) form))
+  (tree-seq #(and (coll? %) (not (empty? %))) #(let [a (macroexpand %)] (or (and (coll? a) (seq a)) (list a))) form))
 
 ; Weeh thanks to bsteuber for advice on resolve!
 (defn fn-seq 
   "Converst a form into a sequence of functions."
   [form]
   (remove nil? (map (fn [s]
-	 (if (some (partial = s) '(fn* let* def loop*))
+	 (if (some (partial = s) '(fn* let* def loop* recur))
 	   s
 	   (resolve s)))
        (filter symbol? (s-seq form)))))
@@ -68,7 +68,7 @@
      (function-tester 'def))
 
 (def general-functions
-     (function-tester '= '== 'case 'if 'comment 'complement 'let 'constantly 'do 'loop* 'lop 'let* 'recur 'fn* 'fn? 'hash 'identical? 'macroexpand 'name 'not= 'partial 'trampoline))
+     (function-tester '= '== 'case 'if 'comment 'complement 'let 'constantly 'do 'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 'identical? 'macroexpand 'name 'not= 'partial 'trampoline))
 
 (def string-functions
      (function-tester 'subs 'str))
