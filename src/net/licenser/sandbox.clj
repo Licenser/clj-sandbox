@@ -187,7 +187,8 @@
           (.get task seconds TimeUnit/MILLISECONDS)
           (catch TimeoutException e
                  (.cancel task true)
-                 (.stop thr (Exception. "Thread stopped!")) "Execution Timed Out"))))
+                 (.stop thr (Exception. "Thread stopped!")) 
+		 (throw (TimeoutException. "Execution Timed Out"))))))
 
 (defn create-sandbox-compiler
   "Creates a sandbox that returns rerunable code, you can pass locals which will be passed to the 'compiled' function in the same order as defined before 'compilation'.
