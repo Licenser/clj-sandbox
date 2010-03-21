@@ -18,7 +18,7 @@
   "Converst a form into a sequence of functions."
   [form]
   (remove nil? (map (fn [s]
-	 (if (some (partial = s) '(fn* let* def loop* recur))
+	 (if (some (partial = s) '(fn* let* def loop* recur new))
 	   s
 	   (resolve s)))
        (filter symbol? (s-seq form)))))
@@ -68,7 +68,7 @@
      (function-tester 'def))
 
 (def general-functions
-     (function-tester '= '== 'case 'if 'comment 'complement 'let 'constantly 'do 'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 'identical? 'macroexpand 'name 'not= 'partial 'trampoline))
+     (function-tester '= '== 'case 'if 'comment 'complement 'let 'constantly 'do 'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 'identical? 'macroexpand 'name 'not= 'partial 'trampoline 'new))
 
 (def string-functions
      (function-tester 'subs 'str))
