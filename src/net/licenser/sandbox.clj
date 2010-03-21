@@ -196,9 +196,10 @@ will wrote 1 into my-writer istead of the standard output."
 						(seq bindings))))
 				  (var *ns*) (create-ns nspace)))
 			       (try 
-				(eval form)
+				(let [r (eval form)]
+				  (if (coll? r) (doall r) r))
 				(finally (pop-thread-bindings))))) context))]
-		      (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS))))
+		   (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS))))
 	     (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
   ([nspace tester timeout]
      (create-sandbox-compiler nspace tester timeout (context (domain (empty-perms-list)))))
@@ -212,10 +213,11 @@ will wrote 1 into my-writer istead of the standard output."
 (defn create-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed."
   ([nspace tester timeout context]
-       (fn sandbox [code]
+       (fn sandbox-executor [code]
 	 (let [form (read-string code)]
 	   (if (tester form nspace)
-	     (let [f (future (sandbox (fn sandbox-jvm-runnable-code [] (eval form)) context))]
+	     (let [f (future (sandbox (fn sandbox-jvm-runnable-code [] (let [r (eval form)]
+									 (if (coll? r) (doall r) r))) context))]
 	       (.get f timeout java.util.concurrent.TimeUnit/MILLISECONDS))
 	     (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
   ([nspace tester timeout]
