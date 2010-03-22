@@ -224,6 +224,22 @@ This returns a tester that takes 2 arguments a function, and a namespace."
 		 (throw (TimeoutException. "Execution Timed Out"))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn add-reader-to-sandbox
+"This function can be used to tell a sandbox how to conuse the code that it
+passed to it.
+
+Usage: (add-reader-to-sandbox sadnbxo read-string)"
+  [sandbox reader-fn]
+  (fn [code & params]
+    (apply sandbox (reader-fn code) params)))
+
+(defn stringify-sandbox
+"This function can be used to make a sandbox take strings instead of the code form.
+
+Usage: (stringify-sandbox (new-sandbox-compiler))"
+  [sandbox]
+  (add-reader-to-sandbox sandbox read-string))
+
 (defnk new-sandbox-compiler
   "Creates a sandbox that returns rerunable code. You can pass locals 
    which will be passed to the 'compiled' function in the same order 
@@ -242,8 +258,7 @@ This returns a tester that takes 2 arguments a function, and a namespace."
    :context (-> (empty-perms-list) domain context)]
   (binding [*ns* (create-ns namespace)]
        (refer 'clojure.core))
-     (fn sandbox-compiler [code & locals]
-	 (let [form (read-string code)]
+     (fn sandbox-compiler [form & locals]
 	   (if (tester form namespace)
 	     (binding [*ns* (create-ns namespace)]
 	       (dorun (map (partial ns-unmap namespace) locals))
@@ -267,7 +282,7 @@ This returns a tester that takes 2 arguments a function, and a namespace."
 			  (let [r (eval form)]
 			    (if (coll? r) (doall r) r))
 			  (finally (pop-thread-bindings))))) context)) timeout)))
-	     (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
+	     (throw (SecurityException. "Code did not pass sandbox guidelines")))))
 
 (defnk new-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed."
@@ -275,8 +290,7 @@ This returns a tester that takes 2 arguments a function, and a namespace."
    :tester *default-sandbox-tester*
    :timeout *default-sandbox-timeout*
    :context (-> (empty-perms-list) domain context)]
-  (fn sandbox-executor [code]
-    (let [form (read-string code)]
+  (fn sandbox-executor [form]
       (if (tester form namespace)
 	(thunk-timeout 
 	 (fn timeout-box [] 
@@ -284,4 +298,4 @@ This returns a tester that takes 2 arguments a function, and a namespace."
 	    (fn sandbox-jvm-runnable-code []
 	      (let [r (eval form)]
 		(if (coll? r) (doall r) r))) context)) timeout)
-	(throw (SecurityException. "Code did not pass sandbox guidelines"))))))
+	(throw (SecurityException. "Code did not pass sandbox guidelines")))))
