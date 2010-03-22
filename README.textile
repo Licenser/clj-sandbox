@@ -34,9 +34,9 @@ h3. Real world examples.
 
 What better example as what people actually do with the code?
 
-# Of cause "http://github.com/Licenser/EPIC":EPIC uses clj-sandbox to run user scripts
-# defn's "http://github.com/defn/walton":walton tool uses clj-sandbox to get better answers for your questions.
-# Raynes's IRC-bot "http://github.com/Raynes/sexpbot":sexpbot uses clj-sandbox too let users evaluate and test code in the IRC.
+# Of cause "EPIC":http://github.com/Licenser/EPIC uses clj-sandbox to run user scripts
+# defn's "walton":http://github.com/defn/walton tool uses clj-sandbox to get better answers for your questions.
+# Raynes's IRC-bot "sexpbot":http://github.com/Raynes/sexpbot uses clj-sandbox too let users evaluate and test code in the IRC.
 
 See even now there are very varity usages for a sandbox and I hope there will be many more.
 
