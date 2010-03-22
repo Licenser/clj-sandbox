@@ -224,7 +224,7 @@ This returns a tester that takes 2 arguments a function, and a namespace."
 		 (throw (TimeoutException. "Execution Timed Out"))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defnk create-sandbox-compiler
+(defnk new-sandbox-compiler
   "Creates a sandbox that returns rerunable code. You can pass locals 
    which will be passed to the 'compiled' function in the same order 
    as defined before 'compilation'. The compiled code is a function that 
@@ -269,7 +269,7 @@ This returns a tester that takes 2 arguments a function, and a namespace."
 			  (finally (pop-thread-bindings))))) context)) timeout)))
 	     (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
 
-(defnk create-sandbox
+(defnk new-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed."
   [:namespace (gensym "net.licenser.sandbox.box")
    :tester *default-sandbox-tester*

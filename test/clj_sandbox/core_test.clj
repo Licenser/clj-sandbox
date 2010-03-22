@@ -4,11 +4,11 @@
 
 
 (defn run-in-sandbox [code]
-  (let [s (create-sandbox :tester debug-tester :timeout 10)] 
+  (let [s (new-sandbox :tester debug-tester :timeout 10)] 
     (s code)))
 
 (defn run-in-sandbox-compiler [code]
-  (let [s (create-sandbox-compiler :tester debug-tester :timeout 10)] 
+  (let [s (new-sandbox-compiler :tester debug-tester :timeout 10)] 
     ((s code) {})))
 
 
