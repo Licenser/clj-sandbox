@@ -1,22 +1,26 @@
 (ns net.licenser.sandbox
+  (:use [clojure.contrib.def :only [defnk]])
   (:require [clojure.contrib.seq-utils :as su])
   (:import (java.util.concurrent FutureTask TimeUnit TimeoutException)))
 
-
-
 (def 
- #^{:doc "Default timeout for the sandbox. It can be altert in the sandbox creators."}
+ #^{:doc "Default timeout for the sandbox. It can be changed by the sandbox creators."}
  *default-sandbox-timeout* 5000)
 
 ; Thanks to hiredman for this code snippet!
 (defn s-seq 
   "Convertns a form into a sequence."
   [form]
-  (tree-seq #(and (coll? %) (not (empty? %))) #(let [a (macroexpand %)] (or (and (coll? a) (seq a)) (list a))) form))
+  (tree-seq #(and (coll? %) (not (empty? %))) 
+	    #(let [a (macroexpand %)] 
+	       (or (and (coll? a) 
+			(seq a)) 
+		   (list a))) 
+	    form))
 
 ; Weeh thanks to bsteuber for advice on resolve!
 (defn fn-seq 
-  "Converst a form into a sequence of functions."
+  "Converts a form into a sequence of functions."
   [form]
   (remove nil? (map (fn [s]
 	 (if (some (partial = s) '(fn* let* def loop* recur new))
@@ -46,11 +50,12 @@
       '())))
 
  (defn class-tester
-  [& classes]
-  (fn [form]
-    (if (= (type form) java.lang.Class)
-      (map (partial isa? form) classes)
-      '())))
+   "Creates a tester than whitelists a Java class."
+   [& classes]
+   (fn [form]
+     (if (= (type form) java.lang.Class)
+       (map (partial isa? form) classes)
+       '())))
 
 (defn combine-tests
   "Combines two testers."
@@ -59,7 +64,8 @@
       (map #(% form) tests)))
 
 (defn whitelist
-  "Creates a whitelist of testers. Testers take a var and unless they return true the test will fail."
+  "Creates a whitelist of testers. Testers take a var and unless 
+  they return true the test will fail."
   ([test & tests]
      {:type :whitelist
       :tests (apply combine-tests test tests)})
@@ -68,7 +74,8 @@
       :tests test}))
 
 (defn blacklist
-  "Creates a blacklist of testers. Testers take a var and if they return true the blacklist will fail the test."
+  "Creates a blacklist of testers. Testers take a var and if they 
+  return true the blacklist will fail the test."
   ([test & tests]
      {:type :blacklist
       :tests (apply combine-tests test tests)})
@@ -80,7 +87,9 @@
      (function-tester 'def))
 
 (def general-functions
-     (function-tester '= '== 'case 'if 'comment 'complement 'let 'constantly 'do 'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 'identical? 'macroexpand 'name 'not= 'partial 'trampoline 'new))
+     (function-tester '= '== 'case 'if 'comment 'complement 'let 'constantly 'do 
+		      'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 'identical? 'macroexpand 
+		      'name 'not= 'partial 'trampoline 'new))
 
 (def string-functions
      (function-tester 'subs 'str))
@@ -96,28 +105,37 @@
 
 (def math-functions 
      (combine-tests 
-      (function-tester '* '/ '+ '- '< '> '<= '>= 'compare 'dec 'even? 'inc 'max 'min 'mod 'neg? 'odd? 'pos? 'quot 'rand 'rand-int 'rem 'zero?) 
+      (function-tester '* '/ '+ '- '< '> '<= '>= 'compare 'dec 'even? 'inc 'max 'min 
+		       'mod 'neg? 'odd? 'pos? 'quot 'rand 'rand-int 'rem 'zero?) 
       (namespace-tester 'clojure.contrib.math)))
 
 (def list-functions
      (combine-tests 
       (function-tester 'map 'reduce 'count 'doall 'dorun 'doseq)
-      (function-tester 'conj 'concat 'cons  'cycle 'interleave 'interpose 'into  'partition 'reverse 'rseq 'seq 'sequence 'sort 'sort-by 'split-at 'split-with 'subseq 'subvec 'tree-seq 'zipmap)
+      (function-tester 'conj 'concat 'cons  'cycle 'interleave 'interpose 'into  
+		       'partition 'reverse 'rseq 'seq 'sequence 'sort 'sort-by 
+		       'split-at 'split-with 'subseq 'subvec 'tree-seq 'zipmap)
       (function-tester 'vec 'vector 'vector?)
-      (function-tester 'distinct 'drop 'drop-last 'drop-while 'empty 'filter 'not-any? 'not-empty 'not-every? 'remove 'replace )
+      (function-tester 'distinct 'drop 'drop-last 'drop-while 'empty 'filter 'not-any? 
+		       'not-empty 'not-every? 'remove 'replace )
       (function-tester 'repeat 'iterate 'list 'list* 'repeatedly 'replicate 'range)
-      (function-tester 'ffirst 'first 'fnext 'last 'next 'nfirst 'nnext 'nth 'nthnext 'peek 'pop 'rest 'second 'take 'take-last 'take-nth 'take-while)
+      (function-tester 'ffirst 'first 'fnext 'last 'next 'nfirst 'nnext 'nth 'nthnext 
+		       'peek 'pop 'rest 'second 'take 'take-last 'take-nth 'take-while)
       (function-tester 'contains? 'counted? 'empty? 'every? 'reversible? 'seq? 'some 'sorted?)))
 
 
 (def set-functions
-     (function-tester 'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 'key 'keys 'merge 'merge-with 'select-keys 'set 'set? 'update-in 'sorted-map 'sorted-map-by 'sorted-set))
+     (function-tester 'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 
+		      'key 'keys 'merge 'merge-with 'select-keys 'set 'set? 'update-in 
+		      'sorted-map 'sorted-map-by 'sorted-set))
 
 
 (defn new-sandbox-tester
   "Creates a new tester combined from a set of black and whitelists."
   [& definitions]
-  (let [{wl :whitelist bl :blacklist} (reduce #(assoc %1 (:type %2) (conj (get %1 (:type %2)) (:tests %2))) {} definitions)]
+  (let [{wl :whitelist bl :blacklist} (reduce #(assoc %1 (:type %2) 
+						      (conj (get %1 (:type %2)) 
+							    (:tests %2))) {} definitions)]
     (fn [form nspace]
       (every?
        true? 
@@ -129,7 +147,8 @@
 	(fn-seq form))))))
 
 (def 
- #^{:doc "A tester that should cover most of the basic functions which seem undangerouse enough - at least I think so. No guarnatee for that!"}
+ #^{:doc "A tester that should cover most of the basic functions that seem 
+          non-dangerouse enough - at least I think so. No promises!"}
  secure-tester
      (new-sandbox-tester 
       (whitelist general-functions)
@@ -170,8 +189,11 @@
         (priv-action thunk)
         context))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (def 
- #^{:doc "A tester that passes everything, convinent for trying and debugging but not secure."} 
+ #^{:doc "A tester that passes everything, convinent for trying and debugging but 
+         not secure."} 
  debug-tester (constantly true))
 
 (def *default-sandbox-tester* secure-tester)
@@ -189,26 +211,34 @@
                  (.cancel task true)
                  (.stop thr (Exception. "Thread stopped!")) 
 		 (throw (TimeoutException. "Execution Timed Out"))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn create-sandbox-compiler
-  "Creates a sandbox that returns rerunable code, you can pass locals which will be passed to the 'compiled' function in the same order as defined before 'compilation'.
-The compiled code is a function that takes one or more parameters, the first parameter is a hash map of bindings like {'*out my-writer} that will beind within the execution.
-every following value is mapped to a local value given at compile time in the same odder so:
+(defnk create-sandbox-compiler
+  "Creates a sandbox that returns rerunable code. You can pass locals 
+   which will be passed to the 'compiled' function in the same order 
+   as defined before 'compilation'. The compiled code is a function that 
+   takes one or more parameters. The first parameter is a hash map of 
+   bindings like {'*out* my-writer} that will beind within the execution.
+   Every following value is mapped to a local value given at compile time 
+   in the same order so:
   (def my-writer (java.io.StringWriter.))
   (def code (compiler \"(println a)\" a))
-  (code {'*out my-writer} 1)
-will wrote 1 into my-writer istead of the standard output."
-  ([nspace tester timeout context]
-     (binding [*ns* (create-ns nspace)]
+  (code {'*out my-writer} 1) ; will write 1 into my-writer instead of the
+  standard output."
+  [:namespace (gensym "net.licenser.sandbox.box")
+   :tester *default-sandbox-tester*
+   :timeout *default-sandbox-timeout*
+   :context (-> (empty-perms-list) domain context)]
+  (binding [*ns* (create-ns namespace)]
        (refer 'clojure.core))
      (fn sandbox-compiler [code & locals]
 	 (let [form (read-string code)]
-	   (if (tester form nspace)
-	     (binding [*ns* (create-ns nspace)]
-	       (dorun (map (partial ns-unmap nspace) locals))
-     	       (dorun (map (partial intern nspace) locals))
+	   (if (tester form namespace)
+	     (binding [*ns* (create-ns namespace)]
+	       (dorun (map (partial ns-unmap namespace) locals))
+     	       (dorun (map (partial intern namespace) locals))
 	       (fn [bindings & values]
-		 (dorun (map (partial intern nspace) locals values))
+		 (dorun (map (partial intern namespace) locals values))
 		 (thunk-timeout 
 		  (fn timeout-box [] 
 		    (sandbox 
@@ -221,39 +251,26 @@ will wrote 1 into my-writer istead of the standard output."
 					  (fn jvm-sandbox-runable-code [[k v]] 
 					    [(resolve k) v]) 
 					  (seq bindings))))
-			    (var *ns*) (create-ns nspace)))
+			    (var *ns*) (create-ns namespace)))
 			 (try 
 			  (let [r (eval form)]
 			    (if (coll? r) (doall r) r))
 			  (finally (pop-thread-bindings))))) context)) timeout)))
 	     (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
-  ([nspace tester timeout]
-     (create-sandbox-compiler nspace tester timeout (context (domain (empty-perms-list)))))
-  ([nspace tester]
-     (create-sandbox-compiler nspace tester *default-sandbox-timeout*))
-  ([nspace]
-     (create-sandbox-compiler nspace *default-sandbox-tester*))
-  ([]
-     (create-sandbox-compiler (gensym "net.licenser.sandbox"))))    
 
-(defn create-sandbox
+(defnk create-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed."
-  ([nspace tester timeout context]
-       (fn sandbox-executor [code]
-	 (let [form (read-string code)]
-	   (if (tester form nspace)
-	     (thunk-timeout 
-	      (fn timeout-box [] 
-		(sandbox 
-		 (fn sandbox-jvm-runnable-code []
-		   (let [r (eval form)]
-		     (if (coll? r) (doall r) r))) context)) timeout)
-	     (throw (SecurityException. "Code did not pass sandbox guidelines"))))))
-  ([nspace tester timeout]
-     (create-sandbox nspace tester timeout (context (domain (empty-perms-list)))))
-  ([nspace tester]
-     (create-sandbox nspace tester *default-sandbox-timeout*))
-  ([nspace]
-     (create-sandbox nspace *default-sandbox-tester*))
-  ([]
-     (create-sandbox (gensym "net.licenser.sandbox.box"))))
+  [:namespace (gensym "net.licenser.sandbox.box")
+   :tester *default-sandbox-tester*
+   :timeout *default-sandbox-timeout*
+   :context (-> (empty-perms-list) domain context)]
+  (fn sandbox-executor [code]
+    (let [form (read-string code)]
+      (if (tester form namespace)
+	(thunk-timeout 
+	 (fn timeout-box [] 
+	   (sandbox 
+	    (fn sandbox-jvm-runnable-code []
+	      (let [r (eval form)]
+		(if (coll? r) (doall r) r))) context)) timeout)
+	(throw (SecurityException. "Code did not pass sandbox guidelines"))))))
