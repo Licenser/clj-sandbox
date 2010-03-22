@@ -28,7 +28,7 @@
 	   (resolve s)))
        (filter symbol? (s-seq form)))))
 
-(defn function-tester
+(defn function-matcher
   "Creates a tester that whitelists functions."
   [& functions]
   (fn [form]
@@ -37,7 +37,7 @@
       (map (partial = form) functions))))
   
 
-(defn namespace-tester
+(defn namespace-matcher
   "Creates a tester that whitelists all functions within a namespace."
   [& namespaces]
   (fn [form]
@@ -49,7 +49,7 @@
      true
       '())))
 
- (defn class-tester
+ (defn class-matcher
    "Creates a tester than whitelists a Java class."
    [& classes]
    (fn [form]
@@ -84,73 +84,84 @@
       :tests test}))
 
 (def variable-functions
-     (function-tester 'def))
+     (function-matcher 'def))
 
 (def general-functions
-     (function-tester '= '== 'case 'if 'comment 'complement 'let 'constantly 'do 
+     (function-matcher '= '== 'case 'if 'comment 'complement 'let 'constantly 'do 
 		      'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 'identical? 'macroexpand 
 		      'name 'not= 'partial 'trampoline 'new))
 
 (def string-functions
-     (function-tester 'subs 'str))
+     (function-matcher 'subs 'str))
 
 (def regexp-functions
-     (function-tester 're-find 're-groups 're-matcher 're-matches 're-pattern 're-seq))
+     (function-matcher 're-find 're-groups 're-matcher 're-matches 're-pattern 're-seq))
 
 (def meta-functions
-     (function-tester 'meta 'with-meta))
+     (function-matcher 'meta 'with-meta))
 
 (def logic-functions
-     (function-tester 'and 'or 'false? 'not 'true?))
+     (function-matcher 'and 'or 'false? 'not 'true?))
 
 (def math-functions 
      (combine-tests 
-      (function-tester '* '/ '+ '- '< '> '<= '>= 'compare 'dec 'even? 'inc 'max 'min 
+      (function-matcher '* '/ '+ '- '< '> '<= '>= 'compare 'dec 'even? 'inc 'max 'min 
 		       'mod 'neg? 'odd? 'pos? 'quot 'rand 'rand-int 'rem 'zero?) 
-      (namespace-tester 'clojure.contrib.math)))
+      (namespace-matcher 'clojure.contrib.math)))
 
 (def list-functions
      (combine-tests 
-      (function-tester 'map 'reduce 'count 'doall 'dorun 'doseq)
-      (function-tester 'conj 'concat 'cons  'cycle 'interleave 'interpose 'into  
+      (function-matcher 'map 'reduce 'count 'doall 'dorun 'doseq)
+      (function-matcher 'conj 'concat 'cons  'cycle 'interleave 'interpose 'into  
 		       'partition 'reverse 'rseq 'seq 'sequence 'sort 'sort-by 
 		       'split-at 'split-with 'subseq 'subvec 'tree-seq 'zipmap)
-      (function-tester 'vec 'vector 'vector?)
-      (function-tester 'distinct 'drop 'drop-last 'drop-while 'empty 'filter 'not-any? 
+      (function-matcher 'vec 'vector 'vector?)
+      (function-matcher 'distinct 'drop 'drop-last 'drop-while 'empty 'filter 'not-any? 
 		       'not-empty 'not-every? 'remove 'replace )
-      (function-tester 'repeat 'iterate 'list 'list* 'repeatedly 'replicate 'range)
-      (function-tester 'ffirst 'first 'fnext 'last 'next 'nfirst 'nnext 'nth 'nthnext 
+      (function-matcher 'repeat 'iterate 'list 'list* 'repeatedly 'replicate 'range)
+      (function-matcher 'ffirst 'first 'fnext 'last 'next 'nfirst 'nnext 'nth 'nthnext 
 		       'peek 'pop 'rest 'second 'take 'take-last 'take-nth 'take-while)
-      (function-tester 'contains? 'counted? 'empty? 'every? 'reversible? 'seq? 'some 'sorted?)))
+      (function-matcher 'contains? 'counted? 'empty? 'every? 'reversible? 'seq? 'some 'sorted?)))
 
 
 (def set-functions
-     (function-tester 'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 
+     (function-matcher 'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 
 		      'key 'keys 'merge 'merge-with 'select-keys 'set 'set? 'update-in 
 		      'sorted-map 'sorted-map-by 'sorted-set))
 
 
-(defn new-sandbox-tester
-  "Creates a new tester combined from a set of black and whitelists."
+(defn new-tester
+"Creates a new tester combined from a set of black and whitelists.
+
+Usage: (new-tester (whitelist (function-matcher 'println)))
+This returns a tester that takes 2 arguments a function, and a namespace."
   [& definitions]
   (let [{wl :whitelist bl :blacklist} (reduce #(assoc %1 (:type %2) 
 						      (conj (get %1 (:type %2)) 
 							    (:tests %2))) {} definitions)]
-    (fn [form nspace]
-      (every?
-       true? 
-       (map 
-	(fn [f] 
-	  (and  
-	   (some true? (su/flatten (map #(% f) (conj wl (namespace-tester nspace)))))
-	   (not (some true? (su/flatten (map #(% f) bl))))))
-	(fn-seq form))))))
+    (fn 
+      ([]
+	 definitions)
+      ([form nspace]
+	 (let [r (map 
+		  (fn [f] 
+		    (and  
+		     (some true? (su/flatten (map #(% f) (conj wl (namespace-matcher nspace)))))
+		     (not (some true? (su/flatten (map #(% f) bl))))))
+		  (fn-seq form))]
+	   (and (not (empty? r)) (every? true? r)))))))
+
+(defn extend-tester
+"Extends a tester with more definitions."
+  [tester & definitions]
+  (apply new-tester (concat (tester) definitions)))
+
 
 (def 
  #^{:doc "A tester that should cover most of the basic functions that seem 
           non-dangerouse enough - at least I think so. No promises!"}
  secure-tester
-     (new-sandbox-tester 
+     (new-tester 
       (whitelist general-functions)
       (whitelist math-functions)
       (whitelist list-functions)
