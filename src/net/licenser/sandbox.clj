@@ -1,5 +1,6 @@
 (ns net.licenser.sandbox
   (:use [clojure.contrib.def :only [defnk]])
+  (:use net.licenser.sandbox.matchers)
   (:require [clojure.contrib.seq-utils :as su])
   (:import (java.util.concurrent FutureTask TimeUnit TimeoutException)))
 
@@ -28,47 +29,12 @@
 	   (resolve s)))
        (filter symbol? (s-seq form)))))
 
-(defn function-matcher
-  "Creates a tester that whitelists functions."
-  [& functions]
-  (fn [form]
-    (if (= (type form) clojure.lang.Var)
-      (map (partial = (:name (meta form))) functions)
-      (map (partial = form) functions))))
-  
-
-(defn namespace-matcher
-  "Creates a tester that whitelists all functions within a namespace."
-  [& namespaces]
-  (fn [form]
-    (cond
-     (= (type form) clojure.lang.Var)
-       (map (partial = (ns-name (:ns (meta form)))) namespaces)
-     (= (type form) java.lang.Class)
-       (map (partial = (symbol (second (re-find #"^class (.*)\.\w+$" (str form))))) namespaces)
-     true
-      '())))
-
- (defn class-matcher
-   "Creates a tester than whitelists a Java class."
-   [& classes]
-   (fn [form]
-     (if (= (type form) java.lang.Class)
-       (map (partial isa? form) classes)
-       '())))
-
-(defn combine-tests
-  "Combines two testers."
-     [& tests]
-     (fn [form]
-      (map #(% form) tests)))
-
 (defn whitelist
   "Creates a whitelist of testers. Testers take a var and unless 
   they return true the test will fail."
   ([test & tests]
      {:type :whitelist
-      :tests (apply combine-tests test tests)})
+      :tests (apply combine-matchers test tests)})
   ([test]
       {:type :whitelist
       :tests test}))
@@ -78,7 +44,7 @@
   return true the blacklist will fail the test."
   ([test & tests]
      {:type :blacklist
-      :tests (apply combine-tests test tests)})
+      :tests (apply combine-matchers test tests)})
   ([test]
       {:type :blacklist
       :tests test}))
@@ -104,13 +70,13 @@
      (function-matcher 'and 'or 'false? 'not 'true?))
 
 (def math-functions 
-     (combine-tests 
+     (combine-matchers 
       (function-matcher '* '/ '+ '- '< '> '<= '>= 'compare 'dec 'even? 'inc 'max 'min 
 		       'mod 'neg? 'odd? 'pos? 'quot 'rand 'rand-int 'rem 'zero?) 
       (namespace-matcher 'clojure.contrib.math)))
 
 (def list-functions
-     (combine-tests 
+     (combine-matchers 
       (function-matcher 'map 'reduce 'count 'doall 'dorun 'doseq)
       (function-matcher 'conj 'concat 'cons  'cycle 'interleave 'interpose 'into  
 		       'partition 'reverse 'rseq 'seq 'sequence 'sort 'sort-by 
