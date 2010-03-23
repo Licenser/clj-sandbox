@@ -109,13 +109,16 @@ This returns a tester that takes 2 arguments a function, and a namespace."
       ([]
 	 definitions)
       ([form nspace]
-	 (let [r (map 
-		  (fn [f] 
-		    (and  
-		     (some true? (su/flatten (map #(% f) (conj wl (namespace-matcher nspace)))))
-		     (not (some true? (su/flatten (map #(% f) bl))))))
-		  (fn-seq form))]
-	   (and (not (empty? r)) (every? true? r)))))))
+	 (let [forms (fn-seq form)]
+	   (if (empty? forms)
+	     true
+	     (let [r (map 
+		      (fn [f] 
+			(and  
+			 (some true? (su/flatten (map #(% f) (conj wl (namespace-matcher nspace)))))
+			 (not (some true? (su/flatten (map #(% f) bl))))))
+		      )]
+	       (and (not (empty? r)) (every? true? r)))))))))
 
 (defn extend-tester
 "Extends a tester with more definitions."
