@@ -22,6 +22,7 @@
 (deftest extend-tester-test
   (let [tester (new-tester (whitelist (function-matcher 'print)))]
     (is (= true (tester '(print 1) 'user)))
+    (is (= true (tester '1 'user)))
     (is (= false (tester '(println 1) 'user)))
     (let [extended-tester (extend-tester tester (whitelist (function-matcher 'println)))]
     (is (= true (extended-tester '(print 1) 'user)))
