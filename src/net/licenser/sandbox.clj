@@ -117,7 +117,7 @@ This returns a tester that takes 2 arguments a function, and a namespace."
 			(and  
 			 (some true? (su/flatten (map #(% f) (conj wl (namespace-matcher nspace)))))
 			 (not (some true? (su/flatten (map #(% f) bl))))))
-		      )]
+		      forms)]
 	       (and (not (empty? r)) (every? true? r)))))))))
 
 (defn extend-tester
