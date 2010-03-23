@@ -57,6 +57,12 @@
 		      'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 'identical? 'macroexpand 
 		      'name 'not= 'partial 'trampoline 'new '.))
 
+(def chunk-functions
+     (function-matcher 'chunked-seq? 'chunk-first 'chunk-rest))
+
+(def cast-functions
+     (function-matcher 'int))
+
 (def string-functions
      (function-matcher 'subs 'str))
 
@@ -125,6 +131,11 @@ This returns a tester that takes 2 arguments a function, and a namespace."
   [tester & definitions]
   (apply new-tester (concat (tester) definitions)))
 
+
+(defn find-bad-forms
+  "Just a helper function to detect the forms that failed the test."
+  [tester forms]
+  (filter #(not (tester % 'no-namespace)) (fn-seq forms)))
 
 (def 
  #^{:doc "A tester that should cover most of the basic functions that seem 
@@ -251,7 +262,7 @@ Usage: (stringify-sandbox (new-sandbox-compiler))"
 			  (let [r (eval form)]
 			    (if (coll? r) (doall r) r))
 			  (finally (pop-thread-bindings))))) context)) timeout)))
-	     (throw (SecurityException. "Code did not pass sandbox guidelines")))))
+	     (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (find-bad-forms tester form)))))))
 
 (defnk new-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed."
@@ -267,4 +278,4 @@ Usage: (stringify-sandbox (new-sandbox-compiler))"
 	    (fn sandbox-jvm-runnable-code []
 	      (let [r (eval form)]
 		(if (coll? r) (doall r) r))) context)) timeout)
-	(throw (SecurityException. "Code did not pass sandbox guidelines")))))
+	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (find-bad-forms tester form))))))
