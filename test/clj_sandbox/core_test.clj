@@ -1,6 +1,6 @@
 (ns clj-sandbox.core-test
-  (:use [net.licenser.sandbox] :reload-all)
-  (:use [net.licenser.sandbox.matchers] :reload-all)
+  (:use [net.licenser.sandbox]
+	[net.licenser.sandbox matchers tester] :reload-all)
   (:use [clojure.test]))
 
 
