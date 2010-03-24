@@ -23,6 +23,7 @@
 (defn class-matcher
   "Creates a tester than whitelists a Java class."
   [& classes]
+  (dorun (map #(if (= % Object) (throw (RuntimeException. "You silly wabbit have 'Object' in a class matcher. This will make /every/ object pass the tester so defeats the prupose of the matcher, I don't let you do that since I'm evelish! Also Rayne made me hunt this for a whole night untill he noted 'oh perhaps it is cause I use Object'... Meh!"))) classes))
   (fn [form]
     (if (= (type form) java.lang.Class)
       (map (partial isa? form) classes)

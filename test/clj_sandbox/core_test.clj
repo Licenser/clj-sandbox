@@ -51,7 +51,7 @@
   (is (= '(false) ((class-matcher Float) java.lang.String)))
   (is (= '(true false) ((class-matcher String Float) java.lang.String)))
   (is (= '(false false) ((class-matcher String Float) java.lang.Thread)))
-  (is (= '() ((class-matcher java.lang.String) :bla))))
+  (is (= '() ((class-matcher java.lang.String) (resolve '+)))))
 
 (deftest loop-timeouts-test
   (is (isa? java.util.concurrent.TimeoutException (try
