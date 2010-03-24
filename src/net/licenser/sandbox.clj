@@ -262,7 +262,7 @@ Usage: (stringify-sandbox (new-sandbox-compiler))"
 			  (let [r (eval form)]
 			    (if (coll? r) (doall r) r))
 			  (finally (pop-thread-bindings))))) context)) timeout)))
-	     (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (find-bad-forms tester form)))))))
+	     (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester form))))))))
 
 (defnk new-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed."
@@ -278,4 +278,4 @@ Usage: (stringify-sandbox (new-sandbox-compiler))"
 	    (fn sandbox-jvm-runnable-code []
 	      (let [r (eval form)]
 		(if (coll? r) (doall r) r))) context)) timeout)
-	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (find-bad-forms tester form)))))))
+	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (pr-str (find-bad-forms tester form))))))))
