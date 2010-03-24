@@ -6,20 +6,20 @@
   "Convertns a form into a sequence."
   [form]
   (tree-seq #(and (coll? %) (not (empty? %))) 
-	    #(let [a (macroexpand %)] 
-	       (or (and (coll? a) 
-			(seq a)) 
-		   (list a))) 
-	    form))
+      #(let [a (macroexpand %)] 
+         (or (and (coll? a) 
+      (seq a)) 
+       (list a))) 
+      form))
 
 ; Weeh thanks to bsteuber for advice on resolve!
 (defn fn-seq 
   "Converts a form into a sequence of functions."
   [form]
   (remove nil? (map (fn [s]
-	 (if (some (partial = s) '(fn* let* def loop* recur new .))
-	   s
-	   (resolve s)))
+   (if (some (partial = s) '(fn* let* def loop* recur new .))
+     s
+     (resolve s)))
        (filter symbol? (s-seq form)))))
 
 (defn whitelist
@@ -49,22 +49,22 @@
   This returns a tester that takes 2 arguments a function, and a namespace."
   [& definitions]
   (let [{wl :whitelist bl :blacklist} (reduce #(assoc %1 (:type %2) 
-						      (conj (get %1 (:type %2)) 
-							    (:tests %2))) {} definitions)]
+                  (conj (get %1 (:type %2)) 
+                  (:tests %2))) {} definitions)]
     (fn 
       ([]
-	 definitions)
+   definitions)
       ([form nspace]
-	 (let [forms (if (= (type form) clojure.lang.Var) (list form) (fn-seq form))]
-	   (if (empty? forms)
-	     true
-	     (let [r (map 
-		      (fn [f] 
-			(and  
-			 (some true? (su/flatten (map #(% f) (conj wl (namespace-matcher nspace)))))
-			 (not (some true? (su/flatten (map #(% f) bl))))))
-		      forms)]
-	       (and (not (empty? r)) (every? true? r)))))))))
+   (let [forms (if (= (type form) clojure.lang.Var) (list form) (fn-seq form))]
+     (if (empty? forms)
+       true
+       (let [r (map 
+          (fn [f] 
+      (and  
+       (some true? (su/flatten (map #(% f) (conj wl (namespace-matcher nspace)))))
+       (not (some true? (su/flatten (map #(% f) bl))))))
+          forms)]
+         (and (not (empty? r)) (every? true? r)))))))))
 
 (defn extend-tester
   "Extends a tester with more definitions."

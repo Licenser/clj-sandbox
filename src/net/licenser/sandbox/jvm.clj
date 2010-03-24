@@ -25,5 +25,3 @@
       (java.security.AccessController/doPrivileged
         (priv-action thunk)
         context))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -46,7 +46,12 @@
   (is (= '(true) ((namespace-matcher 'java.lang) java.lang.String))))
 
 (deftest class-matcher-test
-  (is (= '(true) ((class-matcher java.lang.String) java.lang.String))))
+  (is (= '(true) ((class-matcher String) java.lang.String)))
+  (is (= '(true) ((class-matcher String) java.lang.String)))
+  (is (= '(false) ((class-matcher Float) java.lang.String)))
+  (is (= '(true false) ((class-matcher String Float) java.lang.String)))
+  (is (= '(false false) ((class-matcher String Float) java.lang.Thread)))
+  (is (= '() ((class-matcher java.lang.String) :bla))))
 
 (deftest loop-timeouts-test
   (is (isa? java.util.concurrent.TimeoutException (try

@@ -7,7 +7,6 @@
     (if (= (type form) clojure.lang.Var)
       (map (partial = (:name (meta form))) functions)
       (map (partial = form) functions))))
-  
 
 (defn namespace-matcher
   "Creates a tester that whitelists all functions within a namespace."
