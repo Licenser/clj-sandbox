@@ -278,4 +278,4 @@ Usage: (stringify-sandbox (new-sandbox-compiler))"
 	    (fn sandbox-jvm-runnable-code []
 	      (let [r (eval form)]
 		(if (coll? r) (doall r) r))) context)) timeout)
-	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (find-bad-forms tester form))))))
+	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (find-bad-forms tester form)))))))
