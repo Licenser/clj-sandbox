@@ -80,6 +80,8 @@
       (function-matcher '* '/ '+ '- '< '> '<= '>= 'compare 'dec 'even? 'inc 'max 'min 
 		       'mod 'neg? 'odd? 'pos? 'quot 'rand 'rand-int 'rem 'zero?) 
       (namespace-matcher 'clojure.contrib.math)))
+(def unchecked-math-functions
+     (function-matcher 'unchecked-inc))
 
 (def list-functions
      (combine-matchers 
@@ -115,7 +117,7 @@ This returns a tester that takes 2 arguments a function, and a namespace."
       ([]
 	 definitions)
       ([form nspace]
-	 (let [forms (fn-seq form)]
+	 (let [forms (if (= (type form) clojure.lang.Var) (list form) (fn-seq form))]
 	   (if (empty? forms)
 	     true
 	     (let [r (map 
@@ -134,8 +136,8 @@ This returns a tester that takes 2 arguments a function, and a namespace."
 
 (defn find-bad-forms
   "Just a helper function to detect the forms that failed the test."
-  [tester forms]
-  (filter #(not (tester % 'no-namespace)) (fn-seq forms)))
+  [tester ns  form]
+  (filter #(not (tester % ns)) (fn-seq form)))
 
 (def 
  #^{:doc "A tester that should cover most of the basic functions that seem 
@@ -148,7 +150,10 @@ This returns a tester that takes 2 arguments a function, and a namespace."
       (whitelist set-functions)
       (whitelist logic-functions)
       (whitelist string-functions)
-      (whitelist regexp-functions)))
+      (whitelist regexp-functions)
+      (whitelist chunk-functions)
+      (whitelist cast-functions)
+      (whitelist  unchecked-math-functions)))
 
 
 ; Java Sandbox Stuff, this is from the clojurebot code
@@ -262,7 +267,7 @@ Usage: (stringify-sandbox (new-sandbox-compiler))"
 			  (let [r (eval form)]
 			    (if (coll? r) (doall r) r))
 			  (finally (pop-thread-bindings))))) context)) timeout)))
-	     (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester form))))))))
+	     (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester namespace form))))))))
 
 (defnk new-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed."
@@ -278,4 +283,4 @@ Usage: (stringify-sandbox (new-sandbox-compiler))"
 	    (fn sandbox-jvm-runnable-code []
 	      (let [r (eval form)]
 		(if (coll? r) (doall r) r))) context)) timeout)
-	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (pr-str (find-bad-forms tester form))))))))
+	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (pr-str (find-bad-forms tester namespace form))))))))
