@@ -37,6 +37,7 @@ What better example as what people actually do with the code?
 # Of cause "EPIC":http://github.com/Licenser/EPIC uses clj-sandbox to run user scripts
 # defn's "walton":http://github.com/defn/walton tool uses clj-sandbox to get better answers for your questions.
 # Raynes's IRC-bot "sexpbot":http://github.com/Raynes/sexpbot uses clj-sandbox too let users evaluate and test code in the IRC.
+# "clicki":http://github.com/Licenser/clicki, a crazy wiki that lets user define the entire webside (code and everything) within itself.
 
 See even now there are very varity usages for a sandbox and I hope there will be many more.
 
