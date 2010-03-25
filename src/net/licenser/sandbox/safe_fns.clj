@@ -7,11 +7,16 @@
       :general-fns (function-matcher '= '== 'case 'if 'comment 'complement 'let 'constantly 
              'do 'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 
              'identical? 'macroexpand  'name 'not= 'partial 
-             'trampoline 'new '.)
+             'trampoline 'new '. 'byte 'byte-array 'bytes)
+
+      :array-fns (function-matcher 'into-array 'aget)
+
+      :bit-fns (function-matcher 'bit-and-not 'bit-clear 'bit-flip 'bit-not 'bit-or 'bit-set
+				 'bit-shift-left 'bit-shift-right 'bit-test 'bit-xor)
 
       :chunk-fns (function-matcher 'chunked-seq? 'chunk-first 'chunk-rest)
 
-      :cast-fns (function-matcher 'int)
+      :cast-fns (function-matcher 'int 'char 'long 'short)
 
       :string-fns (function-matcher 'subs 'str)
 
@@ -39,7 +44,7 @@
           'range 'ffirst 'first 'fnext 'last 'next 'nfirst 'nnext 'nth 
           'nthnext 'peek 'pop 'rest 'second 'take 'take-last 'take-nth 
           'take-while 'contains? 'counted? 'empty? 'every? 'reversible?
-          'seq? 'some 'sorted?)
+          'seq? 'some 'sorted? 'apply)
       
       :set-fns (function-matcher 'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 
          'key 'keys 'merge 'merge-with 'select-keys 'set 'set? 
