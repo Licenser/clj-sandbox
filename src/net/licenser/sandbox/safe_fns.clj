@@ -1,5 +1,5 @@
 (ns net.licenser.sandbox.safe-fns
-  (:use net.licenser.sandbox.matchers))
+  (:use net.licenser.sandbox.matcher))
 
 (def safe-functions
      {:variable-fns (function-matcher 'def)
