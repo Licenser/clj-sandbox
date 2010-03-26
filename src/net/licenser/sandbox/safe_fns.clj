@@ -2,12 +2,10 @@
   (:use net.licenser.sandbox.matcher))
 
 (def safe-functions
-     {:variable-fns (function-matcher 'def)
-
-      :general-fns (function-matcher '= '== 'case 'if 'comment 'complement 'let 'constantly 
-             'do 'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 
-             'identical? 'macroexpand  'name 'not= 'partial 
-             'trampoline 'new '. 'byte 'byte-array 'bytes)
+     {:general-fns (function-matcher '= '== 'case 'if 'comment 'complement 'let 'constantly 
+				     'do 'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 
+				     'identical? 'macroexpand  'name 'not= 'partial 
+				     'trampoline 'new '. 'byte 'byte-array 'bytes)
 
       :array-fns (function-matcher 'into-array 'aget)
 
