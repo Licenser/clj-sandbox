@@ -38,7 +38,8 @@
   Usage: (add-reader-to-sandbox sandbox read-string)"
   [sandbox reader-fn]
   (fn [code & params]
-    (apply sandbox (reader-fn code) params)))
+    (binding [*read-eval* false]
+      (apply sandbox (reader-fn code) params))))
 
 (defn stringify-sandbox
   "This function can be used to make a sandbox take strings instead of the code form.
