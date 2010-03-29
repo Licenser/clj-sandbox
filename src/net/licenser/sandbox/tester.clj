@@ -1,6 +1,7 @@
 (ns net.licenser.sandbox.tester
   (:use (net.licenser.sandbox matchers safe-fns))
-  (:require [clojure.contrib.seq-utils :as su]))
+  (:require [clojure.contrib.seq-utils :as su]
+	    [clojure.set :as set]))
 
 (defn s-seq 
   "Convertns a form into a sequence."
@@ -71,6 +72,17 @@
   [tester & definitions]
   (apply new-tester (concat (tester) definitions)))
 
+
+(defn combine-testers
+  [& testers]
+  (apply new-tester (apply concat (map #(%) testers))))
+
+(defn i-want
+  [& forms]
+  (let [[good bad] (split-with (partial not= :but-not) forms)
+	good (su/flatten (map fn-seq good))
+	bad (set/difference (set good) (set (su/flatten (map fn-seq good))))]
+    (new-tester (whitelist (apply function-matcher (map #(:name (meta %)) good))) (blacklist (apply function-matcher (map #(:name (meta %)) bad))))))
 
 (defn find-bad-forms
   "Just a helper function to detect the forms that failed the test."
