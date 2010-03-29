@@ -14,7 +14,7 @@
 
       :chunk-fns (function-matcher 'chunked-seq? 'chunk-first 'chunk-rest)
 
-      :cast-fns (function-matcher 'int 'char 'long 'short)
+      :cast-fns (function-matcher 'int 'char 'long 'short 'symbol)
 
       :string-fns (function-matcher 'subs 'str)
 
@@ -48,6 +48,9 @@
       
       :read-fns (function-matcher 'read-string 'read)
  
+      :ref-fns (function-matcher 'deref)
+
       :set-fns (function-matcher 'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 
          'key 'keys 'merge 'merge-with 'select-keys 'set 'set? 
          'update-in  'sorted-map 'sorted-map-by 'sorted-set)})
+
