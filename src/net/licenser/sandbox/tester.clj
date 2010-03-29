@@ -1,5 +1,5 @@
 (ns net.licenser.sandbox.tester
-  (:use (net.licenser.sandbox matchers safe-fns))
+  (:use (net.licenser.sandbox matcher safe-fns))
   (:require [clojure.contrib.seq-utils :as su]
 	    [clojure.set :as set]))
 

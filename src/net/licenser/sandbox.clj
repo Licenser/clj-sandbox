@@ -38,7 +38,8 @@
   Usage: (add-reader-to-sandbox sandbox read-string)"
   [sandbox reader-fn]
   (fn [code & params]
-    (apply sandbox (reader-fn code) params)))
+    (binding [*read-eval* false]
+      (apply sandbox (reader-fn code) params))))
 
 (defn stringify-sandbox
   "This function can be used to make a sandbox take strings instead of the code form.
@@ -86,7 +87,7 @@
 					  (seq bindings))))
 			    (var *ns*) (create-ns namespace)))
 			 (try 
-			  (let [r (eval form)]
+			  (let [r (binding [*read-eval* false](eval form))]
 			    (if (coll? r) (doall r) r))
 			  (finally (pop-thread-bindings))))) context)) timeout)))
 	     (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester namespace form))))))))
@@ -103,6 +104,6 @@
 	 (fn timeout-box [] 
 	   (sandbox 
 	    (fn sandbox-jvm-runnable-code []
-	      (let [r (eval form)]
+	      (let [r (binding [*read-eval* false](eval form))]
 		(if (coll? r) (doall r) r))) context)) timeout)
 	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (pr-str (find-bad-forms tester namespace form))))))))
