@@ -1,11 +1,14 @@
 (ns net.licenser.sandbox.safe-fns
   (:use net.licenser.sandbox.matcher))
 
+(def not-really-save-functions
+    {:java-fns (function-matcher '.)})
+
 (def safe-functions
      {:general-fns (function-matcher '= '== 'case 'if 'comment 'complement 'let 'constantly 
          'do 'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 
          'identical? 'macroexpand  'name 'not= 'partial 
-         'trampoline 'new '. 'byte 'byte-array 'bytes)
+         'trampoline 'new 'byte 'byte-array 'bytes)
 
       :array-fns (function-matcher 'into-array 'aget)
 
