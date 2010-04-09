@@ -29,7 +29,7 @@
 (def 
  #^{:doc "A tester that should cover most of the basic functions that seem 
           non-dangerous enough - at least I think so. No promises!"}
- secure-tester (apply new-tester (map whitelist (vals safe-functions))))
+ secure-tester (->> safe-functions vals (remove nil?) (map whitelist) (apply new-tester)))
 
 (defn add-reader-to-sandbox
   "This function can be used to tell a sandbox how to conuse the code that it
