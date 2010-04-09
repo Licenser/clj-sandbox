@@ -84,7 +84,7 @@
 		 'nthnext 'peek 'pop 'rest 'second 'take 'take-last 'take-nth 
 		 'take-while 'contains? 'counted? 'empty? 'every? 'reversible?
 		 'seq? 'some 'sorted? 'apply 'butlast 'transient 'vector-of
-		 'lazy-seq 'lazy-cat 'mapcat 'pmap 'rsubseq 'sequ 'sequential?))
+		 'lazy-seq 'lazy-cat 'mapcat 'pmap 'rsubseq 'sequ 'sequential?)
       
       :binding-fns (function-matcher 'push-thread-bindings 'pop-thread-bindings)
 
