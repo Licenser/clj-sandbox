@@ -15,13 +15,13 @@
 		    'find-doc 'find-ns 'find-var 'flush 'format 'gensym
 		    'get-method 'get-thread-bindings 'hash 'identity
 		    'if-let 'if-not 'ifn? 'instance? 'class
-		    'clojure-version 'isa? 'juxt 'keyword 'keyword?
+		    'clojure-version 'isa? 'juxt() 'keyword 'keyword?
 		    'list? 'macroexpand 'macroexpand-1 'memfn 'memoize
 		    'methods 'name 'namespace 'pcalls 'pvalues
 		    'satisfies? 'special-symbol? 'special-form-anchor
 		    'supers 'syntax-symbol-anchor 'the-ns 'type
 		    'vary-meta 'when 'when-first 'when-let 'when-not
-		    'while 'with-in-str 'with-out-str 'xml-seq) 
+		    'while 'with-in-str 'with-out-str 'xml-seq 'juxt) 
 
       :struct-fns (function-matcher 
 		   'accessor 'create-struct 'struct 'struct-map)

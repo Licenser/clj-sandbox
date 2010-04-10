@@ -1,4 +1,4 @@
-(defproject clj-sandbox "0.2.12"
+(defproject clj-sandbox "0.2.13"
   :namespaces [net.licenser.sandbox net.licenser.sandbox.matcher net.licenser.sandbox.tester net.licenser.sandbox.jvm net.licenser.sandbox.save-fns]
   :description "Clojure library for sandboxed execution"
   :dependencies [[org.clojure/clojure "1.1.0"]
