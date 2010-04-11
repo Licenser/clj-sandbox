@@ -38,8 +38,10 @@
 		'bit-and-not 'bit-clear 'bit-flip 'bit-not 'bit-or 'bit-set
 		'bit-shift-left 'bit-shift-right 'bit-test 'bit-xor)
 
-      :chunk-fns (function-matcher 'chunked-seq? 'chunk-first 'chunk-rest)
-      
+      :chunk-fns (function-matcher 
+		  'chunked-seq? 'chunk-first 'chunk-rest 'chunk-buffer
+		  'chunk-append 'chunk-cons 'chunk)
+    
       :cast-fns (function-matcher 
 		 'int 'char 'long 'short 'symbol 'byte 'boolean
 		 'boolean-array 'booleans 'bytes 'cast 'chars 'longs 'bigint
@@ -73,7 +75,7 @@
 			   'unchecked-subtract)
       
       :coll-fns (function-matcher 
-		 'map 'reduce 'count 'doall 'dorun 'doseq
+		 'map 'reduce 'count 'doall 'dorun 'doseq 'for
 		 'conj 'concat 'cons 'cycle 'interleave 'interpose 'into  
 		 'partition 'reverse 'rseq 'seq 'sequence 'sort 'sort-by 
 		 'split-at 'split-with 'subseq 'subvec 'tree-seq 'zipmap
