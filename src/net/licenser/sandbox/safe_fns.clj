@@ -105,15 +105,16 @@
 		'key 'keys 'merge 'merge-with 'select-keys 'set 'set? 
 		'update-in 'sorted-map 'sorted-map-by 'sorted-set 'assoc-in
 		'assoc! 'associative? 'vals)
-      :clojure-classes (class-matcher clojure.lang.LazySeq clojure.lang.ArrayChunk)
+      :clojure-classes (class-matcher clojure.lang.LazySeq clojure.lang.ArrayChunk clojure.lang.XMLHandler)
       :math-classes (class-matcher java.lang.Number java.lang.Math)
-      :basic-classes (class-matcher java.lang.String java.lang.Throwable)
+      :basic-classes (class-matcher java.lang.String java.lang.Throwable StringBuilder)
       })
 
 (def save-objects
-     {:math-classes (class-matcher java.lang.Number java.lang.Math)
-      :basic-classes (class-matcher java.lang.String)
-      :clojure-classes (class-matcher clojure.lang.ArrayChunk clojure.lang.LazySeq)
+     {
+      :clojure-classes (class-matcher clojure.lang.LazySeq clojure.lang.ArrayChunk clojure.lang.XMLHandler)
+      :math-classes (class-matcher java.lang.Number java.lang.Math)
+      :basic-classes (class-matcher java.lang.String java.lang.Throwable StringBuilder)
       :clojure-functions (function-matcher 'nth)})
 
 (def bad-objects
