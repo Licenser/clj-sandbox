@@ -105,3 +105,9 @@
 		'update-in 'sorted-map 'sorted-map-by 'sorted-set 'assoc-in
 		'assoc! 'associative? 'vals)})
 
+(def save-objects
+     {:math-objects (class-matcher Number Math)})
+
+(def bad-objects
+     {:clojure-objects (class-matcher clojure.lang.IRef clojure.lang.ARef clojure.lang.Ref)
+      :thread-objects (class-matcher java.lang.Thread)})

@@ -8,13 +8,11 @@
  #^{:doc "Default timeout for the sandbox. It can be changed by the sandbox creators."}
  *default-sandbox-timeout* 5000)
 
-(def default-obj-tester
-  (new-object-tester
-    (new-tester
-      (whitelist (class-matcher java.lang.String)))))
-
 (defn tree-map [mapper branch? children root]
-  (lazy-seq (map (fn zmap-mapper [e] (if (branch? e) (tree-map mapper branch? children (children e)) (mapper e))) root)))
+  (let [r (lazy-seq (map (fn zmap-mapper [e] (if (branch? e) (tree-map mapper branch? children (children e)) (mapper e))) root))]
+    (if (vector? root)
+      (vec r)
+      r)))
 
 (declare dot)
 
@@ -45,9 +43,21 @@
       (System/setSecurityManager (SecurityManager.)))
 
 (def 
- #^{:doc "A tester that should cover most of the basic functions that seem 
-          non-dangerous enough - at least I think so. No promises!"}
+ #^{:doc 
+"A tester that should cover most of the basic functions that seem 
+non-dangerous enough - at least we think so. No promises!"}
  secure-tester (->> safe-functions vals (remove nil?) (map whitelist) (apply new-tester)))
+
+
+(def default-obj-tester
+ #^{:doc 
+"A tester that should cover most of the basic objects that seem 
+non-dangerous enough - at least we think so. No promises!
+Also some objects that are known to be dangerous."}
+  (new-object-tester
+    (new-tester
+     (->> save-objects vals (remove nil?) (map whitelist))
+     (->> bad-objects vals (remove nil?) (map blacklist)))))
 
 (defn add-reader-to-sandbox
   "This function can be used to tell a sandbox how to conuse the code that it
@@ -121,7 +131,7 @@
 					     [(resolve k) v]) 
 					   (seq bindings))))
 			     (var *ns*) (create-ns namespace)))
-			  (try 
+			  (try
 			   (let [r 
 				 (binding [*read-eval* false
 					   *ns* (create-ns namespace)
@@ -132,7 +142,7 @@
 			   (finally (pop-thread-bindings))))) context)) timeout))
 	       ([] (sandbox-entry-point {}))))
 	   (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester namespace form)))))))))
-     
+
 
 (defnk new-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed."
