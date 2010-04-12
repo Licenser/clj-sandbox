@@ -105,30 +105,32 @@
 	   (binding [*ns* (create-ns namespace)]
 	     (dorun (map (partial ns-unmap namespace) locals))
 	     (dorun (map (partial intern namespace) locals))
-	     (fn [bindings & values]
-	       (dorun (map (partial intern namespace) locals values))
-	       (thunk-timeout 
-		(fn timeout-box [] 
-		  (sandbox 
-		   (fn sandboxed-code []
-		     (let [] 
-		       (push-thread-bindings 
-			(assoc (apply hash-map 
-				      (su/flatten 
-				       (map 
-					(fn jvm-sandbox-runable-code [[k v]] 
-					  [(resolve k) v]) 
-					(seq bindings))))
-			  (var *ns*) (create-ns namespace)))
-		       (try 
-			(let [r 
-                                (binding [*read-eval* false
-                                          *ns* (create-ns namespace)
-                                          dot (dot-maker object-tester)]
-                                  (eval '(def dot net.licenser.sandbox/dot)) 
-                                  (eval form))]
-			  (if (coll? r) (doall r) r))
-			(finally (pop-thread-bindings))))) context)) timeout)))
+	     (fn sandbox-entry-point
+	       ([bindings & values]
+		  (dorun (map (partial intern namespace) locals values))
+		  (thunk-timeout 
+		   (fn timeout-box [] 
+		     (sandbox 
+		      (fn sandboxed-code []
+			(let [] 
+			  (push-thread-bindings 
+			   (assoc (apply hash-map 
+					 (su/flatten 
+					  (map 
+					   (fn jvm-sandbox-runable-code [[k v]] 
+					     [(resolve k) v]) 
+					   (seq bindings))))
+			     (var *ns*) (create-ns namespace)))
+			  (try 
+			   (let [r 
+				 (binding [*read-eval* false
+					   *ns* (create-ns namespace)
+					   dot (dot-maker object-tester)]
+				   (eval '(def dot net.licenser.sandbox/dot)) 
+				   (eval form))]
+			     (if (coll? r) (doall r) r))
+			   (finally (pop-thread-bindings))))) context)) timeout))
+	       ([] (sandbox-entry-point {}))))
 	   (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester namespace form)))))))))
      
 
