@@ -23,6 +23,8 @@
      (resolve s)))
        (filter symbol? (s-seq form)))))
 
+
+  
 (defn whitelist
   "Creates a whitelist of testers. Testers take a var and unless 
   they return true the test will fail."
@@ -43,6 +45,10 @@
       {:type :blacklist
       :tests test}))
 
+
+(defn run-list [l t]
+  (su/flatten (map #(% t) l)))
+
 (defn new-tester
   "Creates a new tester combined from a set of black and whitelists. 
   Usage: (new-tester (whitelist (function-matcher 'println)))
@@ -59,11 +65,11 @@
      (if (empty? forms)
        true
        (let [r (map 
-          (fn [f] 
-      (and  
-       (some true? (su/flatten (map #(% f) (conj wl (namespace-matcher nspace)))))
-       (not (some true? (su/flatten (map #(% f) bl))))))
-          forms)]
+                (fn [f] 
+                  (and  
+                   (some true? (run-list f (conj wl (namespace-matcher nspace))))
+                   (not-any? true? (run-list f bl))))
+                forms)]
          (and (not (empty? r)) (every? true? r)))))))))
 
 (defn new-object-tester
@@ -80,11 +86,11 @@
       ([object method]
          (let [method (symbol method)]
            (and
-            (not-any? false? (su/flatten (map #(% object) bl)))
-            (not-any? false? (su/flatten (map #(% method) bl)))
+            (not-any? true? (run-list object bl))
+            (not-any? true? (run-list method bl))
             (or
-             (some true? (su/flatten (map #(% object) wl)))
-             (some true? (su/flatten (map #(% method) wl)))))
+             (some true? (run-list object wl))
+             (some true? (su/flatten method wl))))
            )))))
 
 (defn extend-tester    "Extends a tester with more definitions."
