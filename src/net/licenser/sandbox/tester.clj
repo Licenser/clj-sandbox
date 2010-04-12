@@ -46,8 +46,8 @@
       :tests test}))
 
 
-(defn run-list [l t]
-  (su/flatten (map #(% t) l)))
+(defn run-list [p l t]
+  (p true? (su/flatten (map #(% t) l))))
 
 (defn new-tester
   "Creates a new tester combined from a set of black and whitelists. 
@@ -59,18 +59,18 @@
                   (:tests %2))) {} definitions)]
     (fn 
       ([]
-   definitions)
+	 definitions)
       ([form nspace]
-   (let [forms (if (= (type form) clojure.lang.Var) (list form) (fn-seq form))]
-     (if (empty? forms)
-       true
-       (let [r (map 
-                (fn [f] 
-                  (and  
-                   (some true? (run-list f (conj wl (namespace-matcher nspace))))
-                   (not-any? true? (run-list f bl))))
-                forms)]
-         (and (not (empty? r)) (every? true? r)))))))))
+	 (let [forms (if (= (type form) clojure.lang.Var) (list form) (fn-seq form))]
+	   (if (empty? forms)
+	     true
+	     (let [r (map 
+		      (fn [f] 
+			(and  
+			 (run-list some (conj wl (namespace-matcher nspace)) f)
+			 (run-list not-any? bl f)))
+		      forms)]
+	       (and (not (empty? r)) (every? true? r)))))))))
 
 (defn new-object-tester
   "Creates a new tester combined from a set of black and whitelists. 
@@ -86,12 +86,11 @@
       ([object method]
          (let [method (symbol method)]
            (and
-            (not-any? true? (run-list object bl))
-            (not-any? true? (run-list method bl))
+            (run-list not-any? bl object)
+            (run-list not-any? bl method)
             (or
-             (some true? (run-list object wl))
-             (some true? (su/flatten method wl))))
-           )))))
+             (run-list some wl object)
+             (run-list some wl method))))))))
 
 (defn extend-tester    "Extends a tester with more definitions."
   [tester & definitions]
