@@ -1,6 +1,6 @@
 (ns net.licenser.sandbox
   (:use [clojure.contrib.def :only [defnk]]
-	(net.licenser.sandbox safe-fns tester jvm))
+	(net.licenser.sandbox matcher safe-fns tester jvm))
   (:require [clojure.contrib.seq-utils :as su])
   (:import (java.util.concurrent FutureTask TimeUnit TimeoutException)))
 
@@ -9,14 +9,34 @@
  *default-sandbox-timeout* 5000)
 
 
+(defn new-object-tester [tester]
+  (fn object-tester [object method namespace]
+    (let [o (tester object namespace)]
+      (if (some false? o)
+        false
+        (let [m (tester (symbol method) namespace)]
+          (if (some true? o)
+            (not (some false? m))
+            (some true? m)))))))
+
+(def default-obj-tester
+  (new-object-tester
+    (new-tester
+      (whitelist (class-matcher java.lang.String)))))
+
 (defn tree-map [mapper branch? children root]
   (lazy-seq (map (fn zmap-mapper [e] (if (branch? e) (tree-map mapper branch? children (children e)) (mapper e))) root)))
 
+(declare dot)
 
-(defn dot-maker [obj-tester] 
+
+(defn find-method [obj method args]
+  (.getMethod (class obj) method (into-array (map class args))))
+
+(defn dot-maker [obj-tester namespace] 
   (fn dot [object method & args]
-    (if (obj-tester object method)
-      (eval (concat (list '. object method) args))
+    (if (obj-tester object method namespace)
+      (.invoke (find-method object method args) object (to-array args))
       (throw (SecurityException. (str "Tried to call: " method " on " object " which is not allowed."))))))
 
 ;;;;;;;; Thanks to hiredman's and  Chousuke as I get it right for this piece of code.
@@ -58,6 +78,20 @@
   [sandbox]
   (add-reader-to-sandbox sandbox read-string))
 
+(defn expand-and-quote [form]
+  (let [f (macroexpand form)]
+    (if (= (first f) '.)
+      (let [[_ obj m & args] f]
+        (concat (list '. obj (str m)) args))
+      f)))
+
+(defn dot-replace [form]
+  (if (coll? form)
+    (tree-map #(if (= % '.) 'dot %) coll?
+      expand-and-quote
+      (expand-and-quote form))
+    form))
+
 (defnk new-sandbox-compiler
   "Creates a sandbox that returns rerunable code. You can pass locals 
    which will be passed to the 'compiled' function in the same order 
@@ -74,14 +108,12 @@
    :tester secure-tester
    :timeout *default-sandbox-timeout*
    :context (-> (empty-perms-list) domain context)
-   :object-tester (fn [o m] true)]
+   :object-tester default-obj-tester]
   (binding [*ns* (create-ns namespace)]
        (refer 'clojure.core))
      (fn sandbox-compiler [form & locals]
-       (if (tester form namespace)
-	 (let [form (if (coll? form)
-		      (tree-map #(if (= % '.) (list 'net.licenser.sandbox/dot-maker object-tester) %) coll? macroexpand form)
-		      form)]
+       (let [form (dot-replace form)]
+         (if (tester form namespace)
 	   (binding [*ns* (create-ns namespace)]
 	     (dorun (map (partial ns-unmap namespace) locals))
 	     (dorun (map (partial intern namespace) locals))
@@ -101,28 +133,31 @@
 					(seq bindings))))
 			  (var *ns*) (create-ns namespace)))
 		       (try 
-			(let [r (binding [*read-eval* false](eval form))]
+			(let [r 
+                                (binding [*read-eval* false
+                                          *ns* (create-ns namespace)
+                                          dot (dot-maker object-tester namespace)]
+                                  (eval '(def dot net.licenser.sandbox/dot)) 
+                                  (eval form))]
 			  (if (coll? r) (doall r) r))
-			(finally (pop-thread-bindings))))) context)) timeout))))
-	   (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester namespace form))))))))
+			(finally (pop-thread-bindings))))) context)) timeout)))
+	   (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester namespace form)))))))))
      
+
 (defnk new-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed."
   [:namespace (gensym "net.licenser.sandbox.box")
    :tester secure-tester
    :timeout *default-sandbox-timeout*
    :context (-> (empty-perms-list) domain context)
-   :object-tester (fn [o m] true)]
+   :object-tester default-obj-tester]
   (fn sandbox-executor [form]
-    (let [form (if (coll? form)
-		 (tree-map #(if (= % '.) (list 'net.licenser.sandbox/dot-maker object-tester) %) coll? macroexpand (macroexpand form))
-		 form)]
-      (prn form)
+    (let [form (dot-replace form)]
       (if (tester form namespace)
 	(thunk-timeout 
 	 (fn timeout-box [] 
 	   (sandbox 
 	    (fn sandbox-jvm-runnable-code []
-	      (let [r (binding [*read-eval* false](eval form))]
+	      (let [r (binding [*read-eval* false *ns* (create-ns namespace) dot (dot-maker object-tester)] (refer 'clojure.core) (eval '(def dot net.licenser.sandbox/dot)) (eval form))]
 		(if (coll? r) (doall r) r))) context)) timeout)
 	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (pr-str (find-bad-forms tester namespace form)))))))))
