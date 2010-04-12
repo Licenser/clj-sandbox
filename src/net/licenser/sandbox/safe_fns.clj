@@ -22,7 +22,8 @@
 		    'satisfies? 'special-symbol? 'special-form-anchor
 		    'supers 'syntax-symbol-anchor 'the-ns 'type
 		    'vary-meta 'when 'when-first 'when-let 'when-not
-		    'while 'with-in-str 'with-out-str 'xml-seq 'juxt) 
+		    'while 'with-in-str 'with-out-str 'xml-seq 'juxt
+		    'throw) 
 
       :struct-fns (function-matcher 
 		   'accessor 'create-struct 'struct 'struct-map)
@@ -106,7 +107,7 @@
 		'assoc! 'associative? 'vals)
       :clojure-classes (class-matcher clojure.lang.LazySeq clojure.lang.ArrayChunk)
       :math-classes (class-matcher java.lang.Number java.lang.Math)
-      :basic-classes (class-matcher java.lang.String)
+      :basic-classes (class-matcher java.lang.String java.lang.Throwable)
       })
 
 (def save-objects
