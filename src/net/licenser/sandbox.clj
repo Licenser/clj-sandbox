@@ -9,6 +9,16 @@
  *default-sandbox-timeout* 5000)
 
 
+(defn tree-map [mapper branch? children root]
+  (lazy-seq (map (fn zmap-mapper [e] (if (branch? e) (tree-map mapper branch? children (children e)) (mapper e))) root)))
+
+
+(defn dot-maker [obj-tester] 
+  (fn dot [object method & args]
+    (if (obj-tester object method)
+      (eval (concat (list '. object method) args))
+      (throw (SecurityException. (str "Tried to call: " method " on " object " which is not allowed."))))))
+
 ;;;;;;;; Thanks to hiredman's and  Chousuke as I get it right for this piece of code.
 ;;;;;;;; Sadly it seems future does not work as a timeout
 (defn thunk-timeout [thunk seconds]
@@ -63,42 +73,51 @@
   [:namespace (gensym "net.licenser.sandbox.box")
    :tester secure-tester
    :timeout *default-sandbox-timeout*
-   :context (-> (empty-perms-list) domain context)]
+   :context (-> (empty-perms-list) domain context)
+   :object-tester (fn [o m] true)]
   (binding [*ns* (create-ns namespace)]
        (refer 'clojure.core))
      (fn sandbox-compiler [form & locals]
-	   (if (tester form namespace)
-	     (binding [*ns* (create-ns namespace)]
-	       (dorun (map (partial ns-unmap namespace) locals))
-     	       (dorun (map (partial intern namespace) locals))
-	       (fn [bindings & values]
-		 (dorun (map (partial intern namespace) locals values))
-		 (thunk-timeout 
-		  (fn timeout-box [] 
-		    (sandbox 
-		     (fn sandboxed-code []
-		       (let [] 
-			 (push-thread-bindings 
-			  (assoc (apply hash-map 
-					(su/flatten 
-					 (map 
-					  (fn jvm-sandbox-runable-code [[k v]] 
-					    [(resolve k) v]) 
-					  (seq bindings))))
-			    (var *ns*) (create-ns namespace)))
-			 (try 
-			  (let [r (binding [*read-eval* false](eval form))]
-			    (if (coll? r) (doall r) r))
-			  (finally (pop-thread-bindings))))) context)) timeout)))
-	     (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester namespace form))))))))
-
+       (if (tester form namespace)
+	 (let [form (if (coll? form)
+		      (tree-map #(if (= % '.) (list 'net.licenser.sandbox/dot-maker object-tester) %) coll? macroexpand form)
+		      form)]
+	   (binding [*ns* (create-ns namespace)]
+	     (dorun (map (partial ns-unmap namespace) locals))
+	     (dorun (map (partial intern namespace) locals))
+	     (fn [bindings & values]
+	       (dorun (map (partial intern namespace) locals values))
+	       (thunk-timeout 
+		(fn timeout-box [] 
+		  (sandbox 
+		   (fn sandboxed-code []
+		     (let [] 
+		       (push-thread-bindings 
+			(assoc (apply hash-map 
+				      (su/flatten 
+				       (map 
+					(fn jvm-sandbox-runable-code [[k v]] 
+					  [(resolve k) v]) 
+					(seq bindings))))
+			  (var *ns*) (create-ns namespace)))
+		       (try 
+			(let [r (binding [*read-eval* false](eval form))]
+			  (if (coll? r) (doall r) r))
+			(finally (pop-thread-bindings))))) context)) timeout))))
+	   (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester namespace form))))))))
+     
 (defnk new-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed."
   [:namespace (gensym "net.licenser.sandbox.box")
    :tester secure-tester
    :timeout *default-sandbox-timeout*
-   :context (-> (empty-perms-list) domain context)]
+   :context (-> (empty-perms-list) domain context)
+   :object-tester (fn [o m] true)]
   (fn sandbox-executor [form]
+    (let [form (if (coll? form)
+		 (tree-map #(if (= % '.) (list 'net.licenser.sandbox/dot-maker object-tester) %) coll? macroexpand (macroexpand form))
+		 form)]
+      (prn form)
       (if (tester form namespace)
 	(thunk-timeout 
 	 (fn timeout-box [] 
@@ -106,4 +125,4 @@
 	    (fn sandbox-jvm-runnable-code []
 	      (let [r (binding [*read-eval* false](eval form))]
 		(if (coll? r) (doall r) r))) context)) timeout)
-	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (pr-str (find-bad-forms tester namespace form))))))))
+	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (pr-str (find-bad-forms tester namespace form)))))))))

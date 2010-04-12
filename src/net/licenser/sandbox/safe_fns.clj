@@ -5,7 +5,8 @@
     {:java-fns (function-matcher '.)})
 
 (def safe-functions
-     {:general-fns (function-matcher 
+     {:internal-fns (function-matcher 'dot-maker)
+      :general-fns (function-matcher 
 		    '= '== 'case 'if 'comment 'complement 'let 'constantly 
 		    'do 'loop* 'loop 'let* 'recur 'fn* 'fn? 'hash 
 		    'identical? 'macroexpand  'name 'not= 'partial 
