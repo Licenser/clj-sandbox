@@ -104,10 +104,14 @@
 		'key 'keys 'merge 'merge-with 'select-keys 'set 'set? 
 		'update-in 'sorted-map 'sorted-map-by 'sorted-set 'assoc-in
 		'assoc! 'associative? 'vals)
-      :goot-classes (class-matcher clojure.lang.LazySeq clojure.lang.ArrayChunk)})
+      :clojure-classes (class-matcher clojure.lang.LazySeq clojure.lang.ArrayChunk)
+      :math-classes (class-matcher java.lang.Number java.lang.Math)
+      :basic-classes (class-matcher java.lang.String)
+      })
 
 (def save-objects
-     {:math-objects (class-matcher Number Math)
+     {:math-classes (class-matcher java.lang.Number java.lang.Math)
+      :basic-classes (class-matcher java.lang.String)
       :clojure-classes (class-matcher clojure.lang.ArrayChunk clojure.lang.LazySeq)
       :clojure-functions (function-matcher 'nth)})
 
