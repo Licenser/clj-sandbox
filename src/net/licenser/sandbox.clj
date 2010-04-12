@@ -8,17 +8,6 @@
  #^{:doc "Default timeout for the sandbox. It can be changed by the sandbox creators."}
  *default-sandbox-timeout* 5000)
 
-
-(defn new-object-tester [tester]
-  (fn object-tester [object method namespace]
-    (let [o (tester object namespace)]
-      (if (some false? o)
-        false
-        (let [m (tester (symbol method) namespace)]
-          (if (some true? o)
-            (not (some false? m))
-            (some true? m)))))))
-
 (def default-obj-tester
   (new-object-tester
     (new-tester
@@ -29,13 +18,12 @@
 
 (declare dot)
 
-
 (defn find-method [obj method args]
   (.getMethod (class obj) method (into-array (map class args))))
 
-(defn dot-maker [obj-tester namespace] 
+(defn dot-maker [obj-tester] 
   (fn dot [object method & args]
-    (if (obj-tester object method namespace)
+    (if (obj-tester object method)
       (.invoke (find-method object method args) object (to-array args))
       (throw (SecurityException. (str "Tried to call: " method " on " object " which is not allowed."))))))
 
@@ -136,7 +124,7 @@
 			(let [r 
                                 (binding [*read-eval* false
                                           *ns* (create-ns namespace)
-                                          dot (dot-maker object-tester namespace)]
+                                          dot (dot-maker object-tester)]
                                   (eval '(def dot net.licenser.sandbox/dot)) 
                                   (eval form))]
 			  (if (coll? r) (doall r) r))

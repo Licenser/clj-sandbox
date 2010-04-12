@@ -44,8 +44,7 @@
       :tests test}))
 
 (defn new-tester
-  "Creates a new tester combined from a set of black and whitelists.
-
+  "Creates a new tester combined from a set of black and whitelists. 
   Usage: (new-tester (whitelist (function-matcher 'println)))
   This returns a tester that takes 2 arguments a function, and a namespace."
   [& definitions]
@@ -67,11 +66,30 @@
           forms)]
          (and (not (empty? r)) (every? true? r)))))))))
 
-(defn extend-tester
-  "Extends a tester with more definitions."
+(defn new-object-tester
+  "Creates a new tester combined from a set of black and whitelists. 
+  Usage: (new-tester (whitelist (function-matcher 'println)))
+  This returns a tester that takes 2 arguments a function, and a namespace."
+  [& definitions]
+  (let [{wl :whitelist bl :blacklist} (reduce #(assoc %1 (:type %2) 
+                  (conj (get %1 (:type %2)) 
+                  (:tests %2))) {} definitions)]
+    (fn 
+      ([]
+         definitions)
+      ([object method]
+         (let [method (symbol method)]
+           (and
+            (not-any? false? (su/flatten (map #(% object) bl)))
+            (not-any? false? (su/flatten (map #(% method) bl)))
+            (or
+             (some true? (su/flatten (map #(% object) wl)))
+             (some true? (su/flatten (map #(% method) wl)))))
+           )))))
+
+(defn extend-tester    "Extends a tester with more definitions."
   [tester & definitions]
   (apply new-tester (concat (tester) definitions)))
-
 
 (defn combine-testers
   [& testers]
