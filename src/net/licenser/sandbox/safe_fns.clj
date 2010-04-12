@@ -103,13 +103,14 @@
 		'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 
 		'key 'keys 'merge 'merge-with 'select-keys 'set 'set? 
 		'update-in 'sorted-map 'sorted-map-by 'sorted-set 'assoc-in
-		'assoc! 'associative? 'vals)})
+		'assoc! 'associative? 'vals)
+      :goot-classes (class-matcher clojure.lang.LazySeq clojure.lang.ArrayChunk)})
 
 (def save-objects
      {:math-objects (class-matcher Number Math)
-      :clojure-objects (class-matcher clojure.lang.ArrayChunk)
+      :clojure-classes (class-matcher clojure.lang.ArrayChunk clojure.lang.LazySeq)
       :clojure-functions (function-matcher 'nth)})
 
 (def bad-objects
-     {:clojure-objects (class-matcher clojure.lang.IRef clojure.lang.ARef clojure.lang.Ref)
+     {:clojure-classes (class-matcher clojure.lang.IRef clojure.lang.ARef clojure.lang.Ref)
       :thread-objects (class-matcher java.lang.Thread)})
