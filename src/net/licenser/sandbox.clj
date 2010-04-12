@@ -16,13 +16,10 @@
 
 (declare dot)
 
-(defn find-method [obj method args]
-  (.getMethod (class obj) method (into-array (map class args))))
-
 (defn dot-maker [obj-tester] 
   (fn dot [object method & args]
     (if (obj-tester object method)
-      (.invoke (find-method object method args) object (to-array args))
+      (clojure.lang.Reflector/invokeInstanceMethod object method (to-array args))
       (throw (SecurityException. (str "Tried to call: " method " on " object " which is not allowed."))))))
 
 ;;;;;;;; Thanks to hiredman's and  Chousuke as I get it right for this piece of code.
@@ -54,10 +51,11 @@ non-dangerous enough - at least we think so. No promises!"}
 "A tester that should cover most of the basic objects that seem 
 non-dangerous enough - at least we think so. No promises!
 Also some objects that are known to be dangerous."}
-  (new-object-tester
-    (new-tester
-     (->> save-objects vals (remove nil?) (map whitelist))
-     (->> bad-objects vals (remove nil?) (map blacklist)))))
+ (apply new-object-tester
+	(concat
+	 (map whitelist (vals save-objects))
+	 (map blacklist (vals bad-objects)))))
+
 
 (defn add-reader-to-sandbox
   "This function can be used to tell a sandbox how to conuse the code that it

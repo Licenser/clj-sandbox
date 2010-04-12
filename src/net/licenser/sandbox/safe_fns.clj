@@ -106,7 +106,9 @@
 		'assoc! 'associative? 'vals)})
 
 (def save-objects
-     {:math-objects (class-matcher Number Math)})
+     {:math-objects (class-matcher Number Math)
+      :clojure-objects (class-matcher clojure.lang.ArrayChunk)
+      :clojure-functions (function-matcher 'nth)})
 
 (def bad-objects
      {:clojure-objects (class-matcher clojure.lang.IRef clojure.lang.ARef clojure.lang.Ref)

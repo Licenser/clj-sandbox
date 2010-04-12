@@ -84,13 +84,15 @@
       ([]
          definitions)
       ([object method]
-         (let [method (symbol method)]
+         (let [method (symbol method)
+	       c (type object)]
            (and
-            (run-list not-any? bl object)
+            (run-list not-any? bl c)
             (run-list not-any? bl method)
             (or
-             (run-list some wl object)
-             (run-list some wl method))))))))
+             (run-list some wl c)
+             (run-list some wl method)
+	     false)))))))
 
 (defn extend-tester    "Extends a tester with more definitions."
   [tester & definitions]
