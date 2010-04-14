@@ -12,6 +12,10 @@
   (let [s (stringify-sandbox (new-sandbox-compiler :tester debug-tester :timeout 10))]
     ((s code) {})))
 
+(deftest eval-map-test
+  (is (= nil (run-in-sandbox-compiler "{:x 'y}")))
+  (is (= nil (run-in-sandbox-compiler "({:x 'y} :y)")))
+  (is (= 'y (run-in-sandbox-compiler "({:x 'y} :x)"))))
 
 (deftest tester-test
   (let [lists (list (whitelist (function-matcher 'print)))
