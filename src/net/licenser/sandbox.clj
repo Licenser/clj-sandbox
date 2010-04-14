@@ -10,9 +10,13 @@
 
 (defn tree-map [mapper branch? children root]
   (let [r (lazy-seq (map (fn zmap-mapper [e] (if (branch? e) (tree-map mapper branch? children (children e)) (mapper e))) root))]
-    (if (vector? root)
-      (vec r)
-      r)))
+    (cond 
+     (vector? root)
+     (vec r)
+     (associative? root)
+     (reduce (fn [m [k v]] (assoc m k v)) {} r)
+     :else 
+     r)))
 
 (declare dot)
 

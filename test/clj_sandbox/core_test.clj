@@ -13,7 +13,7 @@
     ((s code) {})))
 
 (deftest eval-map-test
-  (is (= nil (run-in-sandbox-compiler "{:x 'y}")))
+  (is (= {:x 'y} (run-in-sandbox-compiler "{:x 'y}")))
   (is (= nil (run-in-sandbox-compiler "({:x 'y} :y)")))
   (is (= 'y (run-in-sandbox-compiler "({:x 'y} :x)"))))
 
