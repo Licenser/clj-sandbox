@@ -23,7 +23,7 @@
 		    'supers 'syntax-symbol-anchor 'the-ns 'type
 		    'vary-meta 'when 'when-first 'when-let 'when-not
 		    'while 'with-in-str 'with-out-str 'xml-seq 'juxt
-		    'throw) 
+		    'throw 'pr 'prn) 
 
       :struct-fns (function-matcher 
 		   'accessor 'create-struct 'struct 'struct-map)
@@ -158,7 +158,7 @@
                                       clojure.lang.Streamable clojure.lang.StringSeq clojure.lang.Symbol
                                       clojure.lang.TransactionalHashMap)
       :math-classes (class-matcher java.lang.Number java.lang.Math)
-      :basic-classes (class-matcher java.lang.String java.lang.Throwable StringBuilder)
+      :basic-classes (class-matcher java.lang.String java.lang.Throwable StringBuilder Character)
       :clojure-functions (function-matcher 'nth)})
 
 (def bad-objects
