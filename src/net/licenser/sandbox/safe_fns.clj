@@ -4,6 +4,9 @@
 (def not-really-safe-functions
     {:java-fns (function-matcher '.)})
 
+(def output-functions
+     {:print-fns (function-matcher 'pr 'prn 'print 'println))
+
 (def safe-functions
      {:internal-fns (function-matcher 'dot)
       :general-fns (function-matcher 
@@ -23,7 +26,7 @@
 		    'supers 'syntax-symbol-anchor 'the-ns 'type
 		    'vary-meta 'when 'when-first 'when-let 'when-not
 		    'while 'with-in-str 'with-out-str 'xml-seq 'juxt
-		    'throw 'pr 'prn) 
+		    'throw) 
 
       :struct-fns (function-matcher 
 		   'accessor 'create-struct 'struct 'struct-map)
