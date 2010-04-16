@@ -117,7 +117,7 @@
       
       :ref-fns (function-matcher 
 		'deref 'alter 'commute 'dosync 'ensure 'get-validator 
-		'ref-set 'reset-meta! 'set-validator! 'sync)
+		'ref-set 'reset-meta! 'set-validator! 'sync 'ref)
 
       :set-fns (function-matcher 
 		'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 
