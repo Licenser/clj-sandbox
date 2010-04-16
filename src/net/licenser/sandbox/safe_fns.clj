@@ -5,7 +5,7 @@
     {:java-fns (function-matcher '.)})
 
 (def output-functions
-     {:print-fns (function-matcher 'pr 'prn 'print 'println))
+     {:print-fns (function-matcher 'pr 'prn 'print 'println)})
 
 (def safe-functions
      {:internal-fns (function-matcher 'dot)
