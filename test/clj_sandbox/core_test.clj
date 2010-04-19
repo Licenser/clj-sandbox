@@ -5,11 +5,11 @@
 
 
 (defn run-in-sandbox [code]
-  (let [s (stringify-sandbox (new-sandbox :tester debug-tester :timeout 10))]
+  (let [s (stringify-sandbox (new-sandbox :tester debug-tester :timeout 50))]
     (s code)))
 
 (defn run-in-sandbox-compiler [code]
-  (let [s (stringify-sandbox (new-sandbox-compiler :tester debug-tester :timeout 10))]
+  (let [s (stringify-sandbox (new-sandbox-compiler :tester debug-tester :timeout 50))]
     ((s code) {})))
 
 (deftest eval-map-test
