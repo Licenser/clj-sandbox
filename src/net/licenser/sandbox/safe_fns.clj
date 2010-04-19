@@ -125,10 +125,10 @@
 		'update-in 'sorted-map 'sorted-map-by 'sorted-set 'assoc-in
 		'assoc! 'associative? 'vals)
       :clojure-classes (class-matcher clojure.lang.LazySeq clojure.lang.ArrayChunk clojure.lang.XMLHandler
-                                      clojure.lang.ArraySeq clojure.lang.ArrayStream clojure.lang.ChunkBuffer
+                                      clojure.lang.ArraySeq clojure.lang.ChunkBuffer
                                       clojure.lang.ChunkedCons clojure.lang.Cons clojure.lang.EnumerationSeq
-                                      clojure.lang.IndexedSeq clojure.lang.IteratorSeq clojure.lang.IteratorStream
-                                      clojure.lang.Keyword clojure.lang.LazilyPersistentVector clojure.lang.LazySeq
+                                      clojure.lang.IndexedSeq clojure.lang.IteratorSeq 
+                                      clojure.lang.Keyword clojure.lang.LazilyPersistentVector 
                                       clojure.lang.LineNumberingPushbackReader clojure.lang.Numbers
                                       clojure.lang.PersistentArrayMap clojure.lang.PersistentHashMap
                                       clojure.lang.PersistentHashSet clojure.lang.PersistentList
@@ -136,9 +136,13 @@
                                       clojure.lang.PersistentTreeMap clojure.lang.PersistentTreeSet
                                       clojure.lang.PersistentVector clojure.lang.Range clojure.lang.Ratio
                                       clojure.lang.SeqEnumeration clojure.lang.SeqIterator clojure.lang.Seqable
-                                      clojure.lang.Sequential clojure.lang.Sorted clojure.lang.Stream
-                                      clojure.lang.Streamable clojure.lang.StringSeq clojure.lang.Symbol
-                                      clojure.lang.TransactionalHashMap)
+                                      clojure.lang.Sequential clojure.lang.Sorted clojure.lang.StringSeq
+                                      clojure.lang.Symbol clojure.lang.TransactionalHashMap)
+
+       :clojure-1.1-classes (if (= (clojure-version) "1.1.0")
+                              (eval '(class-matcher clojure.lang.ArrayStream clojure.lang.LazySeq clojure.lang.IteratorStream
+                                             clojure.lang.Stream clojure.lang.Streamable))
+                              nil)
       :math-classes (class-matcher java.lang.Number java.lang.Math)
       :basic-classes (class-matcher java.lang.String java.lang.Throwable StringBuilder)
       })
@@ -146,10 +150,10 @@
 (def save-objects
      {
       :clojure-classes (class-matcher clojure.lang.LazySeq clojure.lang.ArrayChunk clojure.lang.XMLHandler
-                                      clojure.lang.ArraySeq clojure.lang.ArrayStream clojure.lang.ChunkBuffer
+                                      clojure.lang.ArraySeq clojure.lang.ChunkBuffer
                                       clojure.lang.ChunkedCons clojure.lang.Cons clojure.lang.EnumerationSeq
-                                      clojure.lang.IndexedSeq clojure.lang.IteratorSeq clojure.lang.IteratorStream
-                                      clojure.lang.Keyword clojure.lang.LazilyPersistentVector clojure.lang.LazySeq
+                                      clojure.lang.IndexedSeq clojure.lang.IteratorSeq
+                                      clojure.lang.Keyword clojure.lang.LazilyPersistentVector
                                       clojure.lang.LineNumberingPushbackReader clojure.lang.Numbers
                                       clojure.lang.PersistentArrayMap clojure.lang.PersistentHashMap
                                       clojure.lang.PersistentHashSet clojure.lang.PersistentList
@@ -157,9 +161,13 @@
                                       clojure.lang.PersistentTreeMap clojure.lang.PersistentTreeSet
                                       clojure.lang.PersistentVector clojure.lang.Range clojure.lang.Ratio
                                       clojure.lang.SeqEnumeration clojure.lang.SeqIterator clojure.lang.Seqable
-                                      clojure.lang.Sequential clojure.lang.Sorted clojure.lang.Stream
-                                      clojure.lang.Streamable clojure.lang.StringSeq clojure.lang.Symbol
-                                      clojure.lang.TransactionalHashMap)
+                                      clojure.lang.Sequential clojure.lang.Sorted clojure.lang.StringSeq
+                                      clojure.lang.Symbol clojure.lang.TransactionalHashMap)
+
+      :clojure-1.1-classes (if (= (clojure-version) "1.1.0")
+                             (eval '(class-matcher clojure.lang.ArrayStream clojure.lang.LazySeq clojure.lang.IteratorStream
+                                            clojure.lang.Stream clojure.lang.Streamable))
+                             nil)
       :math-classes (class-matcher java.lang.Number java.lang.Math)
       :basic-classes (class-matcher java.lang.String java.lang.Throwable StringBuilder Character)
       :clojure-functions (function-matcher 'nth)})
