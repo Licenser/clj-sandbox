@@ -1,8 +1,12 @@
 (ns net.licenser.sandbox
   (:use [clojure.contrib.def :only [defnk]]
 	(net.licenser.sandbox matcher safe-fns tester jvm))
-  (:require [clojure.contrib.seq-utils :as su])
   (:import (java.util.concurrent FutureTask TimeUnit TimeoutException)))
+
+(try
+ (require '[clojure.contrib.seq-utils :as su])
+ (catch Exception e (require '[clojure.contrib.seq :as su])))
+
 
 (def 
  #^{:doc "Default timeout for the sandbox. It can be changed by the sandbox creators."}
