@@ -1,7 +1,7 @@
 (defproject clj-sandbox "0.3.0-SNAPSHOT"
   :description "Clojure library for sandboxed execution"
-  :dependencies [[org.clojure/clojure "1.1.0"]
-                 [org.clojure/clojure-contrib "1.1.0"]]
+  :dependencies [[org.clojure/clojure "[1.1,1.2]"]
+                 [org.clojure/clojure-contrib "[1.1,1.2]"]]
   :dev-dependencies [
 	[lein-clojars "0.5.0-SNAPSHOT"]
 	[lein-search "0.2.0"]
