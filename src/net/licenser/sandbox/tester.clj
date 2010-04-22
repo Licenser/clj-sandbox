@@ -63,7 +63,7 @@
                   (:tests %2))) {} definitions)]
     (fn 
       ([]
-	 definitions)
+	 [new-tester definitions])
       ([form nspace]
 	 (let [forms (if (= (type form) clojure.lang.Var) (list form) (fn-seq form))]
 	   (if (empty? forms)
@@ -86,7 +86,7 @@
                   (:tests %2))) {} definitions)]
     (fn 
       ([]
-         definitions)
+         [new-object-tester definitions])
       ([object method]
          (let [method (symbol method)
 	       c (type object)]
@@ -100,7 +100,8 @@
 
 (defn extend-tester    "Extends a tester with more definitions."
   [tester & definitions]
-  (apply new-tester (concat (tester) definitions)))
+  (let [[tester tester-defs] (tester)]
+    (apply tester (concat tester-defs definitions))))
 
 (defn combine-testers
   [& testers]
