@@ -45,7 +45,7 @@ h2. Installation
 
 Add the following to your project.clj in leiningen:
 
-  [clj-sandbox "0.2.0-SNAPSHOT"]
+  [clj-sandbox "0.3"]
 
 h2. License
 
