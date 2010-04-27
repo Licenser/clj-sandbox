@@ -12,6 +12,21 @@
   (let [s (stringify-sandbox (new-sandbox-compiler :tester debug-tester :timeout 50))]
     ((s code) {})))
 
+(defn run-in-stringwriter-compiler [code]
+  (let [s (stringify-sandbox 
+	   (new-sandbox-compiler
+	    :tester
+	    (extend-tester secure-tester (whitelist (function-matcher '*out* 'println)))
+	    :object-tester 
+	    (extend-tester 
+	     default-obj-tester 
+	     (whitelist 
+	      (class-matcher java.io.StringWriter)))))]
+    ((s code) {})))
+
+(deftest stringwriter-test
+  (is (= "3" (run-in-stringwriter-compiler "(with-out-str (println 3))"))))
+
 (deftest eval-map-test
   (is (= {:x (quote y)} (run-in-sandbox-compiler "{:x 'y}")))
   (is (= nil (run-in-sandbox-compiler "({:x 'y} :y)")))
@@ -21,7 +36,6 @@
   (let [lists (list (whitelist (function-matcher 'print)))
 	tester (apply new-tester lists)]
     (is (= lists (tester)))))
- 
 
 (deftest extend-tester-test
   (let [tester (new-tester (whitelist (function-matcher 'print)))]
