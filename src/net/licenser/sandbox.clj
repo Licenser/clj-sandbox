@@ -4,9 +4,8 @@
   (:import (java.util.concurrent FutureTask TimeUnit TimeoutException)))
 
 (try
- (require '[clojure.contrib.seq-utils :as su])
- (catch Exception e (require '[clojure.contrib.seq :as su])))
-
+ (use 'clojure.contrib.seq-utils)
+ (catch Exception e (use 'clojure.contrib.seq)))
 
 (def 
  #^{:doc "Default timeout for the sandbox. It can be changed by the sandbox creators."}
@@ -131,7 +130,7 @@ Also some objects that are known to be dangerous."}
 			(let [] 
 			  (push-thread-bindings 
 			   (assoc (apply hash-map 
-					 (su/flatten 
+					 (flatten 
 					  (map 
 					   (fn jvm-sandbox-runable-code [[k v]] 
 					     [(resolve k) v]) 

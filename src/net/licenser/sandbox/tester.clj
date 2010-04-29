@@ -3,8 +3,8 @@
   (:require [clojure.set :as set]))
 
 (try
- (require '[clojure.contrib.seq-utils :as su])
- (catch Exception e (require '[clojure.contrib.seq :as su])))
+ (use 'clojure.contrib.seq-utils)
+ (catch Exception e (use 'clojure.contrib.seq)))
 
 
 (defn s-seq 
@@ -51,7 +51,7 @@
 
 
 (defn run-list [p l t]
-  (p true? (su/flatten (map #(% t) l))))
+  (p true? (flatten (map #(% t) l))))
 
 (defn new-tester
   "Creates a new tester combined from a set of black and whitelists. 
@@ -110,8 +110,8 @@
 (defn i-want
   [& forms]
   (let [[good bad] (split-with (partial not= :but-not) forms)
-	good (su/flatten (map fn-seq good))
-	bad (set/difference (set good) (set (su/flatten (map fn-seq good))))]
+	good (flatten (map fn-seq good))
+	bad (set/difference (set good) (set (flatten (map fn-seq good))))]
     (new-tester (whitelist (apply function-matcher (map #(:name (meta %)) good))) (blacklist (apply function-matcher (map #(:name (meta %)) bad))))))
 
 (defn find-bad-forms
