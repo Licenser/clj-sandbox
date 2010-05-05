@@ -94,6 +94,7 @@
             (run-list not-any? bl c)
             (run-list not-any? bl method)
             (or
+	     (run-list some wl object)
              (run-list some wl c)
              (run-list some wl method)
 	     false)))))))
