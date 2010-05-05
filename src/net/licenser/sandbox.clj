@@ -26,9 +26,9 @@
 (defn dot-maker [obj-tester] 
   (fn dot [object method & args]
     (if (obj-tester object method)
-      (try
-       (clojure.lang.Reflector/invokeInstanceMethod object method (to-array args))
-       (catch Exception _ (clojure.lang.Reflector/invokeStaticMethod object method (to-array args))))
+      (if (= java.lang.Class (class object))
+       (clojure.lang.Reflector/invokeStaticMethod object method (to-array args))
+       (clojure.lang.Reflector/invokeInstanceMethod object method (to-array args)))
       (throw (SecurityException. (str "Tried to call: " method " on " object " which is not allowed."))))))
 
 ;;;;;;;; Thanks to hiredman's and  Chousuke as I get it right for this piece of code.
