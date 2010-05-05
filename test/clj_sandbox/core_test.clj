@@ -27,6 +27,9 @@
 (deftest stringwriter-test
   (is (= "3" (run-in-stringwriter-compiler "(with-out-str (println 3))"))))
 
+(deftest math-cos-test
+  (is (= 0.8775825618903728 (run-in-sandbox-compiler "(Math/cos 0.5)"))))
+
 (deftest eval-map-test
   (is (= {:x (quote y)} (run-in-sandbox-compiler "{:x 'y}")))
   (is (= nil (run-in-sandbox-compiler "({:x 'y} :y)")))
