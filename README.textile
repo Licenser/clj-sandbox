@@ -49,7 +49,7 @@ Add the following to your project.clj in leiningen:
 
 h2. License
 
-Copyright (c) 2009 Heinz N. Gies.
+Copyright (c) 2009 Heinz N. Gies and Anthony Simpson.
 
 This code is published under the EPL, have fun! See LICENSE.html for the booring stuff.
 
