@@ -111,7 +111,9 @@
 		 'nthnext 'peek 'pop 'rest 'second 'take 'take-last 'take-nth 
 		 'take-while 'contains? 'counted? 'empty? 'every? 'reversible?
 		 'seq? 'some 'sorted? 'apply 'butlast 'transient 'vector-of
-		 'lazy-seq 'lazy-cat 'mapcat 'pmap 'rsubseq 'sequ 'sequential?)
+		 'lazy-seq 'lazy-cat 'mapcat 'pmap 'rsubseq 'sequ 'sequential?
+		 'shuffle 'flatten 'group-by 'partition-by 'frequencies
+		 'reductions 'partition-all 'rand-nth)
       
       :binding-fns (function-matcher 'push-thread-bindings 'pop-thread-bindings)
 
