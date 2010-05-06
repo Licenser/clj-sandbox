@@ -16,7 +16,7 @@
   (let [s (stringify-sandbox 
 	   (new-sandbox-compiler
 	    :tester
-	    (extend-tester secure-tester (whitelist (function-matcher '*out* 'println)))
+	    (extend-tester secure-tester (whitelist (function-matcher '*out* 'println) (class-matcher java.io.StringWriter)))
 	    :object-tester 
 	    (extend-tester 
 	     default-obj-tester 
@@ -25,7 +25,7 @@
     ((s code) {})))
 
 (deftest stringwriter-test
-  (is (= "3" (run-in-stringwriter-compiler "(with-out-str (println 3))"))))
+  (is (= "3\n" (run-in-stringwriter-compiler "(with-out-str (println 3))"))))
 
 (deftest math-cos-test
   (is (= 0.8775825618903728 (run-in-sandbox-compiler "(Math/cos 0.5)"))))
@@ -38,7 +38,7 @@
 (deftest tester-test
   (let [lists (list (whitelist (function-matcher 'print)))
 	tester (apply new-tester lists)]
-    (is (= lists (tester)))))
+    (is (= [new-tester lists] (tester)))))
 
 (deftest extend-tester-test
   (let [tester (new-tester (whitelist (function-matcher 'print)))]
