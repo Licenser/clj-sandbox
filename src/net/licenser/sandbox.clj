@@ -1,7 +1,7 @@
 (ns net.licenser.sandbox
   (:use [clojure.contrib.def :only [defnk]]
 	(net.licenser.sandbox matcher safe-fns tester jvm))
-  (:import (java.util.concurrent FutureTask TimeUnit TimeoutException)))
+  (:import (java.util.concurrent FutureTask TimeUnit TimeoutException ExecutionException)))
 
 (try
  (use 'clojure.contrib.seq-utils)
@@ -42,7 +42,15 @@
           (catch TimeoutException e
                  (.cancel task true)
                  (.stop thr (Exception. "Thread stopped!")) 
-		 (throw (TimeoutException. "Execution Timed Out"))))))
+		 (throw (TimeoutException. "Execution timed out.")))
+	  (catch ExecutionException e
+	    (.cancel task true)
+	    (.stop thr (Exception. "Thread stopped!")) 
+	    (throw (SecurityException. "Exception in sandboxed code." (.getCause e))))
+	  (catch Exception e
+	    (.cancel task true)
+	    (.stop thr (Exception. "Thread stopped!")) 
+	    (throw (SecurityException. "Exception in sandboxed code." e))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn enable-security-manager []
