@@ -16,7 +16,7 @@
 		    'trampoline 'new 'bytes 'assert 'bean 'binding
 		    'comp 'complement 'cond 'condp '->> '->
 		    'delay 'force 'print-doc 'dotimes 'dtype 'extenders
-		    'find-doc 'find-ns 'find-var 'flush 'format 'gensym
+		    'find-doc 'find-ns 'flush 'format 'gensym
 		    'get-method 'get-thread-bindings 'hash 'identity
 		    'if-let 'if-not 'ifn? 'instance? 'class
 		    'clojure-version 'isa? 'juxt() 'keyword 'keyword?
@@ -123,7 +123,7 @@
       
       :ref-fns (function-matcher 
 		'deref 'alter 'commute 'dosync 'ensure 'get-validator 
-		'ref-set 'reset-meta! 'set-validator! 'sync 'ref)
+		'ref-set 'set-validator! 'sync 'ref)
 
       :set-fns (function-matcher 
 		'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 
