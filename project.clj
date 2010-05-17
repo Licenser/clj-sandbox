@@ -1,4 +1,4 @@
-(defproject clj-sandbox "0.3.6"
+(defproject clj-sandbox "0.3.7"
   :description "Clojure library for sandboxed execution"
   :dependencies [[org.clojure/clojure "[1.1,1.2-master-SNAPSHOT]"]
                  [org.clojure/clojure-contrib "[1.1,1.2-SNAPSHOT]"]]

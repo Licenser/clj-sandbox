@@ -18,6 +18,8 @@
      (vec r)
      (associative? root)
      (reduce (fn [m [k v]] (assoc m k v)) {} r)
+     (set? root)
+     (set r)
      :else 
      r)))
 
