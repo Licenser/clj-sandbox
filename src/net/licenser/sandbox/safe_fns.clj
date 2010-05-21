@@ -129,7 +129,7 @@
 		'disj 'dissoc 'assoc 'find 'get 'get-in 'hash-set 'hash-map 
 		'key 'keys 'merge 'merge-with 'select-keys 'set 'set? 
 		'update-in 'sorted-map 'sorted-map-by 'sorted-set 'assoc-in
-		'assoc! 'associative? 'vals)
+		'assoc! 'associative? 'vals 'key 'val)
 
       :clojure-classes (let [c (filter 
 				     #(not (nil? %)) 
