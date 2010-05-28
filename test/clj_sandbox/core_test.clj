@@ -54,6 +54,7 @@
   (is (= (list #'clojure.core/map) (fn-seq '(map))))
   (is (= '(loop* recur) (fn-seq '(loop [] (recur)))))
   (is (= (list 'new java.lang.String) (fn-seq '(java.lang.String. ""))))
+  (is (= (list 'clojure.core) (fn-seq 'clojure.core)))
   (is (= '(loop* def recur) (fn-seq '(loop [_ (def x 1)] (recur))))))
 
 (deftest function-matcher-test

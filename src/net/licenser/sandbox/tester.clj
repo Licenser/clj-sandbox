@@ -3,8 +3,8 @@
   (:require [clojure.set :as set]))
 
 (try
- (use 'clojure.contrib.seq-utils)
- (catch Exception e (use 'clojure.contrib.seq)))
+ (use '[clojure.contrib.seq :only []])
+ (catch Exception e (use '[clojure.contrib.seq-utils :only [flatten]])))
 
 
 (defn s-seq 
@@ -22,9 +22,11 @@
   "Converts a form into a sequence of functions."
   [form]
   (remove nil? (map (fn [s]
-   (if (some (partial = s) '(fn* let* def loop* recur new .))
-     s
-     (resolve s)))
+    (if (some (partial = s) '(fn* let* def loop* recur new .))
+      s
+      (try
+        (resolve s)
+        (catch Exception e s))))
        (filter symbol? (s-seq form)))))
 
 
