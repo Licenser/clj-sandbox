@@ -3,8 +3,8 @@
   (:require [clojure.set :as set]))
 
 (try
- (use '[clojure.contrib.seq :only []])
- (catch Exception e (use '[clojure.contrib.seq-utils :only [flatten]])))
+  (use '[clojure.contrib.seq-utils :only [flatten]])
+  (catch Exception e))
 
 
 (defn s-seq 
