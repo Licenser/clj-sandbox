@@ -109,6 +109,17 @@ Also some objects that are known to be dangerous."}
       (expand-and-quote form))
     form))
 
+
+(def state-tester
+     (new-tester (whitelist (constantly '(true)))
+		 (blacklist (function-matcher 'def 'def* 
+					      'ensure 'ref-set 'alter 'commute 
+					      'swap! 'compare-and-set! ))))
+
+(defn has-state? [form]
+     (not (state-tester form nil)))
+
+
 (defnk new-sandbox-compiler
   "Creates a sandbox that returns rerunable code. You can pass locals 
    which will be passed to the 'compiled' function in the same order 
@@ -120,63 +131,96 @@ Also some objects that are known to be dangerous."}
   (def my-writer (java.io.StringWriter.))
   (def code (compiler \"(println a)\" a))
   (code {'*out my-writer} 1) ; will write 1 into my-writer instead of the
-  standard output."
+  standard output.
+  If :remember-state >= 1 the namespace will be torn down with every time
+  the code is executed and rebuild with the history of state changing
+  functions. State changing means having def, def*, alter, swap! or dosync
+  in it."
   [:namespace (gensym "net.licenser.sandbox.box")
    :tester secure-tester
    :timeout *default-sandbox-timeout*
    :context (-> (empty-perms-list) domain context)
-   :object-tester default-obj-tester]
-  (binding [*ns* (create-ns namespace)]
-       (refer 'clojure.core))
-     (fn sandbox-compiler [form & locals]
-       (let [form (dot-replace form)]
-         (if (tester form namespace)
-	   (binding [*ns* (create-ns namespace)]
-	     (dorun (map (partial ns-unmap namespace) locals))
-	     (dorun (map (partial intern namespace) locals))
-	     (fn sandbox-entry-point
-	       ([bindings & values]
-		  (dorun (map (partial intern namespace) locals values))
-		  (thunk-timeout 
-		   (fn timeout-box [] 
-		     (sandbox 
-		      (fn sandboxed-code []
-			(let [] 
-			  (push-thread-bindings 
-			   (assoc (apply hash-map 
-					 (flatten 
-					  (map 
-					   (fn jvm-sandbox-runable-code [[k v]] 
-					     [(resolve k) v]) 
-					   (seq bindings))))
-			     (var *ns*) (create-ns namespace)))
-			  (try
-			   (let [r 
-				 (binding [*read-eval* false
-					   *ns* (create-ns namespace)
-					   dot (dot-maker object-tester)]
-				   (eval '(def dot net.licenser.sandbox/dot)) 
-				   (eval form))]
-			     (if (coll? r) (doall r) r))
-			   (finally (pop-thread-bindings))))) context)) timeout))
-	       ([] (sandbox-entry-point {}))))
-	   (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester namespace form)))))))))
-
+   :object-tester default-obj-tester
+   :remember-state 0]
+  (let [history (atom [])]
+    (fn sandbox-compiler [form & locals]
+      (let [form (dot-replace form)]
+	(if (tester form namespace)
+	  (fn sandbox-entry-point
+	    ([bindings & values]
+	       (binding [*ns* (create-ns namespace)]
+		 (refer 'clojure.core)
+		 (dorun (map (partial intern namespace) locals values))
+		 (thunk-timeout 
+		  (fn timeout-box [] 
+		    (sandbox 
+		     (fn sandboxed-code []
+		       (push-thread-bindings 
+			(assoc (apply hash-map 
+				      (flatten 
+				       (map (fn jvm-sandbox-runable-code [[k v]]  [(resolve k) v]) (seq bindings))))
+			  (var *ns*) (create-ns namespace)))
+		       (if (not (zero? remember-state))
+			 (doseq [d @history]
+			   (try
+			     (let [r (binding [*read-eval* false *ns* (create-ns namespace) dot (dot-maker object-tester)] (refer 'clojure.core) (eval '(def dot net.licenser.sandbox/dot)) (eval d))]
+			       (if (coll? r) (doall r) r))
+			     (catch Exception e
+			       (swap! history #(remove (partial = d) %))))))
+		       (try
+			 (let [r 
+			       (binding [*read-eval* false
+					 *ns* (create-ns namespace)
+					 dot (dot-maker object-tester)]
+				 (eval '(def dot net.licenser.sandbox/dot)) 
+				 (eval form))]
+			   (if (and  (not (zero? remember-state)) (has-state? form))
+			     (do
+			       (if (>= (count @history) remember-state)
+				 (swap! history #(conj (rest %) form))
+				 (swap! history conj form))
+			       (remove-ns namespace)))
+			   (if (coll? r) (doall r) r))
+			 (finally (pop-thread-bindings)))) context)) timeout)))
+	    ([] (sandbox-entry-point {})))
+	  (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester namespace form))))))))))
+  
 
 (defnk new-sandbox
-  "Creates a sandbox that evaluates the code string that it gets passed."
+  "Creates a sandbox that evaluates the code string that it gets passed.
+   The given namespace will be keeped unless :remember-state is given a
+   number greater then zero. If :remember-state >= 1 the namespace will
+   be torn down for every call of the sandbox, but functions like def,
+   alter, dosync will be 'rememberd' and rerun on the next sandbox call.
+   Only remember-state commands are keeped in history, if one command in
+   the history causes an exception it is removed."
   [:namespace (gensym "net.licenser.sandbox.box")
    :tester secure-tester
    :timeout *default-sandbox-timeout*
    :context (-> (empty-perms-list) domain context)
-   :object-tester default-obj-tester]
-  (fn sandbox-executor [form]
-    (let [form (dot-replace form)]
-      (if (tester form namespace)
-	(thunk-timeout 
-	 (fn timeout-box [] 
-	   (sandbox 
-	    (fn sandbox-jvm-runnable-code []
-	      (let [r (binding [*read-eval* false *ns* (create-ns namespace) dot (dot-maker object-tester)] (refer 'clojure.core) (eval '(def dot net.licenser.sandbox/dot)) (eval form))]
-		(if (coll? r) (doall r) r))) context)) timeout)
-	(throw (SecurityException. (str "Code did not pass sandbox guidelines:" (pr-str (find-bad-forms tester namespace form)))))))))
+   :object-tester default-obj-tester
+   :remember-state 0]
+  (let [history (atom [])]
+    (fn sandbox-executor [form]
+      (let [form (dot-replace form)]
+	(if (tester form namespace)
+	  (thunk-timeout 
+	   (fn timeout-box [] 
+	     (sandbox 
+	      (fn sandbox-jvm-runnable-code []
+		(if (not (zero? remember-state))
+		  (doseq [d @history]
+		    (try
+		      (let [r (binding [*read-eval* false *ns* (create-ns namespace) dot (dot-maker object-tester)] (refer 'clojure.core) (eval '(def dot net.licenser.sandbox/dot)) (eval d))]
+			(if (coll? r) (doall r) r))
+		      (catch Exception e
+			(swap! history #(remove (partial = d) %))))))
+		(let [r (binding [*read-eval* false *ns* (create-ns namespace) dot (dot-maker object-tester)] (refer 'clojure.core) (eval '(def dot net.licenser.sandbox/dot)) (eval form))]
+		  (if (and  (not (zero? remember-state)) (has-state? form))
+		    (do
+		      (if (>= (count @history) remember-state)
+			(swap! history #(conj (rest %) form))
+			(swap! history conj form))
+		      (remove-ns namespace)))
+		    (if (coll? r) (doall r) r))) context)) timeout)
+	  (throw (SecurityException. (str "Code did not pass sandbox guidelines:" (pr-str (find-bad-forms tester namespace form))))))))))
