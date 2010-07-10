@@ -1,11 +1,7 @@
 (ns net.licenser.sandbox.tester
-  (:use (net.licenser.sandbox matcher safe-fns))
+  (:use [net.licenser.sandbox matcher safe-fns]
+	[clojure.contrib.seq-utils :only [flatten]])
   (:require [clojure.set :as set]))
-
-(try
-  (use '[clojure.contrib.seq-utils :only [flatten]])
-  (catch Exception e))
-
 
 (defn s-seq 
   "Convertns a form into a sequence."

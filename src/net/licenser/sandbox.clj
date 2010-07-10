@@ -97,7 +97,9 @@ Also some objects that are known to be dangerous."}
   (let [f (macroexpand form)]
     (if (= (first f) '.)
       (let [[_ obj m & args] f]
-        (concat (list '. obj (str m)) args))
+	(if (and (seq? m) (empty? args))
+	  (concat (list '. obj (str (first m))) (rest m))
+	  (concat (list '. obj (str m)) args)))
       f)))
 
 (defn dot-replace [form]
