@@ -5,7 +5,7 @@
     {:java-fns (function-matcher '.)})
 
 (def output-functions
-     {:print-fns (function-matcher 'pr 'prn 'print 'println)})
+     {:print-fns (function-matcher 'pr 'prn 'print 'println)})g
 
 (def safe-functions
      {:internal-fns (function-matcher 'dot)
@@ -17,7 +17,7 @@
 		    'comp 'complement 'cond 'condp '->> '->
 		    'delay 'force 'print-doc 'dotimes 'dtype 'extenders
 		    'find-doc 'find-ns 'flush 'format 'gensym
-		    'get-method 'get-thread-bindings 'hash 'identity
+		    'get-method 'hash 'identity
 		    'if-let 'if-not 'ifn? 'instance? 'class
 		    'clojure-version 'isa? 'juxt() 'keyword 'keyword?
 		    'list? 'macroexpand 'macroexpand-1 'memfn 'memoize
