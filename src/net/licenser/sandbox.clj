@@ -141,6 +141,7 @@ Also some objects that are known to be dangerous."}
    :timeout *default-sandbox-timeout*
    :context (-> (empty-perms-list) domain context)
    :object-tester default-obj-tester
+   :initial []
    :remember-state 0]
   (let [history (atom [])]
     (fn sandbox-compiler [form & locals]
@@ -160,8 +161,9 @@ Also some objects that are known to be dangerous."}
 				      (flatten 
 				       (map (fn jvm-sandbox-runable-code [[k v]]  [(resolve k) v]) (seq bindings))))
 			  (var *ns*) (create-ns namespace)))
-		       (if (not (zero? remember-state))
-			 (doseq [d @history]
+		       (if (or (not (empty? initial))
+			       (not (zero? remember-state)))
+			 (doseq [d (concat initial @history)]
 			   (try
 			     (let [r (binding [*read-eval* false *ns* (create-ns namespace) dot (dot-maker object-tester)] (refer 'clojure.core) (eval '(def dot net.licenser.sandbox/dot)) (eval d))]
 			       (if (coll? r) (doall r) r))
@@ -193,12 +195,14 @@ Also some objects that are known to be dangerous."}
    be torn down for every call of the sandbox, but functions like def,
    alter, dosync will be 'rememberd' and rerun on the next sandbox call.
    Only remember-state commands are keeped in history, if one command in
-   the history causes an exception it is removed."
+   the history causes an exception it is removed. If initial is given it
+   is run prior to any code on each run."
   [:namespace (gensym "net.licenser.sandbox.box")
    :tester secure-tester
    :timeout *default-sandbox-timeout*
    :context (-> (empty-perms-list) domain context)
    :object-tester default-obj-tester
+   :initial []
    :remember-state 0]
   (let [history (atom [])]
     (fn sandbox-executor [form]
@@ -208,8 +212,9 @@ Also some objects that are known to be dangerous."}
 	   (fn timeout-box [] 
 	     (sandbox 
 	      (fn sandbox-jvm-runnable-code []
-		(if (not (zero? remember-state))
-		  (doseq [d @history]
+		(if (or (not (empty? initial))
+		     (not (zero? remember-state)))
+		  (doseq [d (concat initial @history)]
 		    (try
 		      (let [r (binding [*read-eval* false *ns* (create-ns namespace) dot (dot-maker object-tester)] (refer 'clojure.core) (eval '(def dot net.licenser.sandbox/dot)) (eval d))]
 			(if (coll? r) (doall r) r))
