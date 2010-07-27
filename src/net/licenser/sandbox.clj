@@ -163,16 +163,19 @@ Also some objects that are known to be dangerous."}
 			  (var *ns*) (create-ns namespace)))
 		       (if (or (not (empty? initial))
 			       (not (zero? remember-state)))
-			 (doseq [d (concat initial @history)]
-			   (try
-			     (let [r (binding [*read-eval* false *ns* (create-ns namespace) dot (dot-maker object-tester)] (refer 'clojure.core) (eval '(def dot net.licenser.sandbox/dot)) (eval d))]
-			       (if (coll? r) (doall r) r))
-			     (catch Exception e
-			       (swap! history #(remove (partial = d) %))))))
+			 (do
+			   (binding [*ns* (create-ns namespace)]
+			     (refer 'clojure.core))
+			   (doseq [d (concat initial @history)]
+			     (try
+			       (binding [*read-eval* false *ns* (find-ns namespace) dot (dot-maker object-tester)]
+				 (eval '(def dot net.licenser.sandbox/dot)) (eval d))
+			       (catch Exception e
+				 (swap! history #(remove (partial = d) %)))))))
 		       (try
 			 (let [r 
 			       (binding [*read-eval* false
-					 *ns* (create-ns namespace)
+					 *ns* (find-ns namespace)
 					 dot (dot-maker object-tester)]
 				 (eval '(def dot net.licenser.sandbox/dot)) 
 				 (eval form))]
@@ -213,13 +216,16 @@ Also some objects that are known to be dangerous."}
 	     (sandbox 
 	      (fn sandbox-jvm-runnable-code []
 		(if (or (not (empty? initial))
-		     (not (zero? remember-state)))
-		  (doseq [d (concat initial @history)]
-		    (try
-		      (let [r (binding [*read-eval* false *ns* (create-ns namespace) dot (dot-maker object-tester)] (refer 'clojure.core) (eval '(def dot net.licenser.sandbox/dot)) (eval d))]
-			(if (coll? r) (doall r) r))
-		      (catch Exception e
-			(swap! history #(remove (partial = d) %))))))
+			(not (zero? remember-state)))
+		  (do
+		    (binding [*ns* (create-ns namespace)]
+			(refer 'clojure.core))
+		    (doseq [d (concat initial @history)]
+		      (try
+			(let [r (binding [*read-eval* false *ns* (find-ns namespace) dot (dot-maker object-tester)] (eval '(def dot net.licenser.sandbox/dot)) (eval d))]
+			  (if (coll? r) (doall r) r))
+			(catch Exception e
+			  (swap! history #(remove (partial = d) %)))))))
 		(let [r (binding [*read-eval* false *ns* (create-ns namespace) dot (dot-maker object-tester)] (refer 'clojure.core) (eval '(def dot net.licenser.sandbox/dot)) (eval form))]
 		  (if (and  (not (zero? remember-state)) (has-state? form))
 		    (do

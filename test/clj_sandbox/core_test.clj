@@ -24,6 +24,16 @@
 	      (class-matcher java.io.StringWriter)))))]
     ((s code) {})))
 
+
+
+(deftest initial-test
+(let [newdefn '(defn + [x y] (- x y))  
+      sc (stringify-sandbox (new-sandbox-compiler
+			     :tester (extend-tester secure-tester (whitelist (function-matcher 'defn 'meta)))
+			     :initial ['(ns-unmap *ns* '+)
+				       newdefn]))]
+  (is (= 42 ((sc "(+ 44 2)"))))))
+
 (deftest stringwriter-test
   (is (= "3\n" (run-in-stringwriter-compiler "(with-out-str (println 3))"))))
 
