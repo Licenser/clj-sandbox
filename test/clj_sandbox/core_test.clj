@@ -27,12 +27,13 @@
 
 
 (deftest initial-test
-(let [newdefn '(defn + [x y] (- x y))  
-      sc (stringify-sandbox (new-sandbox-compiler
-			     :tester (extend-tester secure-tester (whitelist (function-matcher 'defn 'meta)))
-			     :initial ['(ns-unmap *ns* '+)
-				       newdefn]))]
-  (is (= 42 ((sc "(+ 44 2)"))))))
+  (let [defn2 '(defmacro defn [name & body] `(def ~name (fn ~name ~@body)))
+        sc (stringify-sandbox (new-sandbox-compiler
+                               :tester (extend-tester secure-tester (whitelist (function-matcher 'def)))
+                               :timer 10000
+                               :remember-state 5
+                               :initial [defn2]))]
+    (is (= '(def blah (fn* ([] 1))) ((sc "(macroexpand '(defn blah [] 1))"))))))
 
 (deftest stringwriter-test
   (is (= "3\n" (run-in-stringwriter-compiler "(with-out-str (println 3))"))))
