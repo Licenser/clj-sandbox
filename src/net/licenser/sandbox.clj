@@ -1,11 +1,8 @@
 (ns net.licenser.sandbox
   (:use [clojure.contrib.def :only [defnk]]
-	(net.licenser.sandbox matcher safe-fns tester jvm))
-  (:import (java.util.concurrent FutureTask TimeUnit TimeoutException ExecutionException)))
-
-(try
- (use 'clojure.contrib.seq-utils)
- (catch Exception e (use 'clojure.contrib.seq)))
+	(net.licenser.sandbox matcher safe-fns tester jvm)
+	[clojure.contrib.seq-utils :only [flatten]])
+  (:import [java.util.concurrent FutureTask TimeUnit TimeoutException ExecutionException]))
 
 (def 
  #^{:doc "Default timeout for the sandbox. It can be changed by the sandbox creators."}
@@ -143,6 +140,11 @@ Also some objects that are known to be dangerous."}
    :object-tester default-obj-tester
    :initial []
    :remember-state 0]
+  (if (and
+       (= "1.2.0" (clojure-version))
+       (not (empty? initial)))
+    (binding [*out* *err*]
+      (println "WARNING: Clojure 1.2 introduced behaviour that breams the :initial functionality, we are working on a fix but at this moment it is NOT working properly!")))
   (let [history (atom [])]
     (fn sandbox-compiler [form & locals]
       (let [form (dot-replace form)]
@@ -207,6 +209,11 @@ Also some objects that are known to be dangerous."}
    :object-tester default-obj-tester
    :initial []
    :remember-state 0]
+  (if (and
+       (= "1.2.0" (clojure-version))
+       (not (empty? initial)))
+    (binding [*out* *err*]
+      (println "WARNING: Clojure 1.2 introduced behaviour that breams the :initial functionality, we are working on a fix but at this moment it is NOT working properly!")))
   (let [history (atom [])]
     (fn sandbox-executor [form]
       (let [form (dot-replace form)]

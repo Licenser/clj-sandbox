@@ -1,3 +1,6 @@
+h1. Warning
+
+In Clojure 1.2 the :initial feature isn't working at the moment!!!
 h1. clj-sandbox
 
 Why clj-sandbox?
