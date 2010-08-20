@@ -1,11 +1,6 @@
 (ns net.licenser.sandbox
-  (:use [clojure.contrib.def :only [defnk]]
-	(net.licenser.sandbox matcher safe-fns tester jvm))
+  (:use (net.licenser.sandbox matcher safe-fns tester jvm))
   (:import (java.util.concurrent FutureTask TimeUnit TimeoutException ExecutionException)))
-
-(try
- (use 'clojure.contrib.seq-utils)
- (catch Exception e (use 'clojure.contrib.seq)))
 
 (def 
  #^{:doc "Default timeout for the sandbox. It can be changed by the sandbox creators."}
@@ -72,7 +67,7 @@ non-dangerous enough - at least we think so. No promises!
 Also some objects that are known to be dangerous."}
  (apply new-object-tester
 	(concat
-	 (map whitelist (vals save-objects))
+	 (map whitelist (vals safe-objects))
 	 (map blacklist (vals bad-objects)))))
 
 
@@ -120,7 +115,7 @@ Also some objects that are known to be dangerous."}
      (not (state-tester form nil)))
 
 
-(defnk new-sandbox-compiler
+(defn new-sandbox-compiler
   "Creates a sandbox that returns rerunable code. You can pass locals 
    which will be passed to the 'compiled' function in the same order 
    as defined before 'compilation'. The compiled code is a function that 
@@ -136,13 +131,14 @@ Also some objects that are known to be dangerous."}
   the code is executed and rebuild with the history of state changing
   functions. State changing means having def, def*, alter, swap! or dosync
   in it."
-  [:namespace (gensym "net.licenser.sandbox.box")
-   :tester secure-tester
-   :timeout *default-sandbox-timeout*
-   :context (-> (empty-perms-list) domain context)
-   :object-tester default-obj-tester
-   :initial []
-   :remember-state 0]
+  [& {:keys [namespace tester timeout context object-tester initial remember-state]
+      :or {namespace (gensym "net.licenser.sandbox.box")
+           tester secure-tester
+           timeout *default-sandbox-timeout*
+           context (-> (empty-perms-list) domain context)
+           object-tester default-obj-tester
+           initial []
+           remember-state 0}}]
   (let [history (atom [])]
     (fn sandbox-compiler [form & locals]
       (let [form (dot-replace form)]
@@ -189,9 +185,8 @@ Also some objects that are known to be dangerous."}
 			 (finally (pop-thread-bindings)))) context)) timeout)))
 	    ([] (sandbox-entry-point {})))
 	  (throw (SecurityException. (str "Code did not pass sandbox guidelines: " (pr-str (find-bad-forms tester namespace form))))))))))
-  
 
-(defnk new-sandbox
+(defn new-sandbox
   "Creates a sandbox that evaluates the code string that it gets passed.
    The given namespace will be keeped unless :remember-state is given a
    number greater then zero. If :remember-state >= 1 the namespace will
@@ -200,13 +195,14 @@ Also some objects that are known to be dangerous."}
    Only remember-state commands are keeped in history, if one command in
    the history causes an exception it is removed. If initial is given it
    is run prior to any code on each run."
-  [:namespace (gensym "net.licenser.sandbox.box")
-   :tester secure-tester
-   :timeout *default-sandbox-timeout*
-   :context (-> (empty-perms-list) domain context)
-   :object-tester default-obj-tester
-   :initial []
-   :remember-state 0]
+  [& {:keys [namespace tester timeout context object-tester initial remember-state]
+      :or {namespace (gensym "net.licenser.sandbox.box")
+           tester secure-tester
+           timeout *default-sandbox-timeout*
+           context (-> (empty-perms-list) domain context)
+           object-tester default-obj-tester
+           initial []
+           remember-state 0}}]
   (let [history (atom [])]
     (fn sandbox-executor [form]
       (let [form (dot-replace form)]

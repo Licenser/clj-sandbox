@@ -33,7 +33,7 @@
                                :timer 10000
                                :remember-state 5
                                :initial [defn2]))]
-    (is (= '(def blah (fn* ([] 1))) ((sc "(macroexpand '(defn blah [] 1))"))))))
+    (is (= (quote (def blah (fn* ([] 1)))) ((sc "(macroexpand '(defn blah [] 1))"))))))
 
 (deftest stringwriter-test
   (is (= "3\n" (run-in-stringwriter-compiler "(with-out-str (println 3))"))))
