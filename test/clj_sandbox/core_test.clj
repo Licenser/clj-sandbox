@@ -35,6 +35,17 @@
                                :initial [defn2]))]
     (is (= (quote (def blah (fn* ([] 1)))) ((sc "(macroexpand '(defn blah [] 1))"))))))
 
+(deftest time-test
+  (let [sc (stringify-sandbox (new-sandbox-compiler
+                               :tester (extend-tester secure-tester
+                                                      (whitelist (class-matcher java.lang.System)
+                                                                 (function-matcher 'prn)))
+                               :object-tester (extend-tester default-obj-tester (whitelist (class-matcher java.lang.System)))
+                               :timer 10000))
+        writer (java.io.StringWriter.)]
+    (is (do ((sc "(time nil)") {'*out* writer})
+            (seq (str writer))))))
+
 (deftest stringwriter-test
   (is (= "3\n" (run-in-stringwriter-compiler "(with-out-str (println 3))"))))
 

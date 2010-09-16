@@ -22,11 +22,15 @@
 
 (defn dot-maker [obj-tester] 
   (fn dot [object method & args]
-    (if (obj-tester object method)
-      (if (instance? java.lang.Class object)
-       (clojure.lang.Reflector/invokeStaticMethod object method (to-array args))
-       (clojure.lang.Reflector/invokeInstanceMethod object method (to-array args)))
-      (throw (SecurityException. (str "Tried to call: " method " on " object " which is not allowed."))))))
+    (let [[top bottom] (.split method "/")
+          method (cond (not bottom) method
+                       (= \( (first top)) (str "(" bottom)
+                       :else bottom)]
+      (if (obj-tester object method)
+        (if (instance? java.lang.Class object)
+          (clojure.lang.Reflector/invokeStaticMethod object method (to-array args))
+          (clojure.lang.Reflector/invokeInstanceMethod object method (to-array args)))
+        (throw (SecurityException. (str "Tried to call: " method " on " object " which is not allowed.")))))))
 
 ;;;;;;;; Thanks to hiredman's and  Chousuke as I get it right for this piece of code.
 ;;;;;;;; Sadly it seems future does not work as a timeout
