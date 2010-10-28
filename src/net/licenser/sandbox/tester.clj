@@ -27,12 +27,15 @@
 (defn whitelist
   "Creates a whitelist of testers. Testers take a var and unless 
   they return true the test will fail."
+  ([]
+     {:type :whitelist
+      :tests (constantly true)})
   ([test & tests]
      {:type :whitelist
       :tests (apply combine-matchers test tests)})
   ([test]
       {:type :whitelist
-      :tests test}))
+       :tests test}))
 
 (defn blacklist
   "Creates a blacklist of testers. Testers take a var and if they 
