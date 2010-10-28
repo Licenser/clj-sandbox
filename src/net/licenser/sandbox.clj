@@ -135,13 +135,12 @@ Also some objects that are known to be dangerous."}
   the code is executed and rebuild with the history of state changing
   functions. State changing means having def, def*, alter, swap! or dosync
   in it."
-  [& {:keys [namespace tester timeout context object-tester initial remember-state]
+  [& {:keys [namespace tester timeout context object-tester remember-state]
       :or {namespace (gensym "net.licenser.sandbox.box")
            tester secure-tester
            timeout *default-sandbox-timeout*
            context (-> (empty-perms-list) domain context)
            object-tester default-obj-tester
-           initial []
            remember-state 0}}]
   (let [history (atom [])]
     (fn sandbox-compiler [form & locals]
@@ -161,12 +160,11 @@ Also some objects that are known to be dangerous."}
 				      (flatten 
 				       (map (fn jvm-sandbox-runable-code [[k v]]  [(resolve k) v]) (seq bindings))))
 			  (var *ns*) (create-ns namespace)))
-		       (if (or (not (empty? initial))
-			       (not (zero? remember-state)))
+		       (if (not (zero? remember-state))
 			 (do
 			   (binding [*ns* (create-ns namespace)]
 			     (refer 'clojure.core))
-			   (doseq [d (concat initial @history)]
+			   (doseq [d @history]
 			     (try
 			       (binding [*read-eval* false *ns* (find-ns namespace) dot (dot-maker object-tester)]
 				 (eval '(def dot net.licenser.sandbox/dot)) (eval d))
@@ -197,15 +195,13 @@ Also some objects that are known to be dangerous."}
    be torn down for every call of the sandbox, but functions like def,
    alter, dosync will be 'rememberd' and rerun on the next sandbox call.
    Only remember-state commands are keeped in history, if one command in
-   the history causes an exception it is removed. If initial is given it
-   is run prior to any code on each run."
-  [& {:keys [namespace tester timeout context object-tester initial remember-state]
+   the history causes an exception it is removed."
+  [& {:keys [namespace tester timeout context object-tester remember-state]
       :or {namespace (gensym "net.licenser.sandbox.box")
            tester secure-tester
            timeout *default-sandbox-timeout*
            context (-> (empty-perms-list) domain context)
            object-tester default-obj-tester
-           initial []
            remember-state 0}}]
   (let [history (atom [])]
     (fn sandbox-executor [form]
@@ -215,12 +211,11 @@ Also some objects that are known to be dangerous."}
 	   (fn timeout-box [] 
 	     (sandbox 
 	      (fn sandbox-jvm-runnable-code []
-		(if (or (not (empty? initial))
-			(not (zero? remember-state)))
+		(if (not (zero? remember-state))
 		  (do
 		    (binding [*ns* (create-ns namespace)]
-			(refer 'clojure.core))
-		    (doseq [d (concat initial @history)]
+                      (refer 'clojure.core))
+		    (doseq [d @history]
 		      (try
 			(let [r (binding [*read-eval* false *ns* (find-ns namespace) dot (dot-maker object-tester)] (eval '(def dot net.licenser.sandbox/dot)) (eval d))]
 			  (if (coll? r) (doall r) r))
