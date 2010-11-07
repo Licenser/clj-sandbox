@@ -27,7 +27,8 @@
                        (= \( (first top)) (str "(" bottom)
                        :else bottom)]
       (if (obj-tester object method)
-        (if (instance? java.lang.Class object)
+        (if (and (instance? java.lang.Class object)
+                 (not= (class object) java.lang.Class))
           (clojure.lang.Reflector/invokeStaticMethod object method (to-array args))
           (clojure.lang.Reflector/invokeInstanceMethod object method (to-array args)))
         (throw (SecurityException. (str "Tried to call: " method " on " object " which is not allowed.")))))))
