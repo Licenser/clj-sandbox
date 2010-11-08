@@ -27,10 +27,13 @@
                        (= \( (first top)) (str "(" bottom)
                        :else bottom)]
       (if (obj-tester object method)
-        (if (and (instance? java.lang.Class object)
-                 (not= (class object) java.lang.Class))
-          (clojure.lang.Reflector/invokeStaticMethod object method (to-array args))
-          (clojure.lang.Reflector/invokeInstanceMethod object method (to-array args)))
+        (try
+          (clojure.lang.Reflector/invokeInstanceMethod object method (to-array args))
+          (catch Exception e
+            (if (some #{"invokeMatchingMethod"} (map #(.getMethodName %) (seq (.getStackTrace e))))
+              (do (println "blah2")
+                  (clojure.lang.Reflector/invokeStaticMethod object method (to-array args)))
+              (throw e))))
         (throw (SecurityException. (str "Tried to call: " method " on " object " which is not allowed.")))))))
 
 ;;;;;;;; Thanks to hiredman's and  Chousuke as I get it right for this piece of code.
