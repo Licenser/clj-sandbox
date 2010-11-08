@@ -31,8 +31,7 @@
           (clojure.lang.Reflector/invokeInstanceMethod object method (to-array args))
           (catch Exception e
             (if (some #{"invokeMatchingMethod"} (map #(.getMethodName %) (seq (.getStackTrace e))))
-              (do (println "blah2")
-                  (clojure.lang.Reflector/invokeStaticMethod object method (to-array args)))
+              (clojure.lang.Reflector/invokeStaticMethod object method (to-array args))
               (throw e))))
         (throw (SecurityException. (str "Tried to call: " method " on " object " which is not allowed.")))))))
 
