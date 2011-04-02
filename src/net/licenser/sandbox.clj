@@ -1,7 +1,6 @@
 (ns net.licenser.sandbox
   (:use [clojure.contrib.def :only [defnk]]
-	(net.licenser.sandbox matcher safe-fns tester jvm)
-	[clojure.contrib.seq-utils :only [flatten]])
+	(net.licenser.sandbox matcher safe-fns tester jvm))
   (:import [java.util.concurrent FutureTask TimeUnit TimeoutException ExecutionException]))
 
 (def 

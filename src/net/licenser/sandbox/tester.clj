@@ -1,6 +1,5 @@
 (ns net.licenser.sandbox.tester
-  (:use [net.licenser.sandbox matcher safe-fns]
-	[clojure.contrib.seq-utils :only [flatten]])
+  (:use [net.licenser.sandbox matcher safe-fns])
   (:require [clojure.set :as set]))
 
 (defn s-seq 
